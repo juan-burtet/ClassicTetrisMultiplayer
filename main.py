@@ -1,0 +1,3 @@
+import tetris
+
+tetris.main()
