@@ -8,7 +8,8 @@ import traceback
 import libclient
 
 sel = selectors.DefaultSelector()
-
+host = "127.0.0.1"
+port = 65432
 
 def create_request(action, player):
     if action == "hello" || "update" :
@@ -36,15 +37,11 @@ def start_connection(host, port, request):
     sel.register(sock, events, data=message)
 
 
-if len(sys.argv) != 5:
-    print("usage:", sys.argv[0], "<host> <port> <action> <value>")
-    sys.exit(1)
-
 player1 = {
     "id"        : 0,
     "name"      : "",
-    "score"     : "",
-    "level"     : "",
+    "score"     : 0,
+    "level"     : 0,
     "lines"     : 0,
     "nextBlock" : "",
     "board"     : "",
@@ -55,8 +52,8 @@ player1 = {
 player2 = {
     "id"        : 0,
     "name"      : "",
-    "score"     : "",
-    "level"     : "",
+    "score"     : 0,
+    "level"     : 0,
     "lines"     : 0,
     "nextBlock" : "",
     "board"     : "",
@@ -65,8 +62,6 @@ player2 = {
 }
 
 
-
-host, port = sys.argv[1], int(sys.argv[2])
 action = "hello"
 request = create_request(action, player1)
 start_connection(host, port, request)
@@ -78,7 +73,7 @@ try:
         message = key.data
         try:
            message.process_events(mask)
-           r1 = message.response
+           r1 = message.getResponse()
         except Exception as e:
            print(
                 "main: error: exception for",
@@ -91,10 +86,10 @@ try:
 except KeyboardInterrupt:
     print("caught keyboard interrupt, exiting")
 
-player1["ID"] = response["ID"]
+player1["ID"] = r1["ID"]
 action = "update"
 request = create_request(action, player1)
-
+enemy = None
 
 try:
     while True:
@@ -103,11 +98,10 @@ try:
             message = key.data
             try:
                 message.process_events(mask)
+                enemy = message.getResponse()
+                print(enemy)
             except Exception as e:
-                print(
-                    "main: error: exception for",
-                    f"{message.addr}:\n{traceback.format_exc()}",
-                )
+                print( "main: error: exception for", f"{message.addr}:\n{traceback.format_exc()}")
                 message.close()
         # Check for a socket being monitored to continue.
         if not sel.get_map():

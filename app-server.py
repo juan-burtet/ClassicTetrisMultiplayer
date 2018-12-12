@@ -8,6 +8,8 @@ import traceback
 import libserver
 
 sel = selectors.DefaultSelector()
+host = "127.0.0.1"
+port = 65432
 
 
 def accept_wrapper(sock):
@@ -19,7 +21,7 @@ def accept_wrapper(sock):
 
 host = "127.0.0.1"
 port = 65432
-    
+
 lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # Avoid bind() exception: OSError: [Errno 48] Address already in use
 lsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -33,8 +35,8 @@ sel.register(lsock, selectors.EVENT_READ, data=None)
 player1 = {
     "id"        : 0,
     "name"      : "",
-    "score"     : "",
-    "level"     : "",
+    "score"     : 0,
+    "level"     : 0,
     "lines"     : 0,
     "nextBlock" : "",
     "board"     : "",
@@ -45,8 +47,8 @@ player1 = {
 player2 = {
     "id"        : 0,
     "name"      : "",
-    "score"     : "",
-    "level"     : "",
+    "score"     : 0,
+    "level"     : 0,
     "lines"     : 0,
     "nextBlock" : "",
     "board"     : "",
@@ -70,14 +72,13 @@ try:
                     message.process_events(mask)
                     player1 = message.getPlayer1()
                     player2 = message.getPlayer2()
-                   
+
                 except Exception:
                     print(
                         "main: error: exception for",
-                        f"{message.addr}:\n{traceback.format_exc()}",
-                    )
+                        )
                     message.close()
-        
+
 except KeyboardInterrupt:
     print("caught keyboard interrupt, exiting")
 finally:
