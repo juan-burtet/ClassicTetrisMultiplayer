@@ -28,6 +28,7 @@ WHITE       = (255, 255, 255)
 BLACK       = (  0,   0,   0)
 RED         = (236,  17,  11)
 GREEN       = ( 29, 242,  10)
+YELLOW      = (253, 228, 129)
 
 BGCOLOR = BLACK
 TEXTCOLOR = WHITE
@@ -180,7 +181,7 @@ Função main.
 '''
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT, SCOREFONT, POINTSFONT
-    global LINESFONT, NAME
+    global LINESFONT, NAME, WINNERFONT
     
     # Inicializa o pygame
     pygame.init()
@@ -192,14 +193,16 @@ def main():
     BASICFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 18)
     # Fonte para letras grandes
     BIGFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 100)
-
-    
+    # Fonte para o SCORE
     SCOREFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 24)
+    # Fonte para os Pontos
     POINTSFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 28)
+    # Fonte para as linhas
     LINESFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 26)
+    # Fonte para a tela de vitoria
+    WINNERFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 50)
+    # Nome do Player 1
     NAME = 'JUAN'
-
-
 
     # Seta o nome da Janela
     pygame.display.set_caption('Classic Tetris Multiplayer')
@@ -211,8 +214,8 @@ def main():
     while True:
         # Roda o jogo
         runGame()
-        # Morreu, dá a tela de GAME OVER
-        showTextScreen('GAME OVER')
+        # Dá o nome do vencedor
+        showWinnerScreen('FELIPE')
 
 '''
 Função que mostra um texto grande no meio.
@@ -238,6 +241,43 @@ def showTextScreen(text):
     while checkForKeyPress() == None:
         pygame.display.update()
         FPSCLOCK.tick()
+
+'''
+Função que immprime o vencedor na tela
+'''
+def showWinnerScreen(text):
+
+    position = 100
+
+    # Desenha a sombra do texto
+    titleSurf, titleRect = makeTextObjs(text, WINNERFONT, BLACK)
+    titleRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2) - 3)
+    DISPLAYSURF.blit(titleSurf, titleRect)
+
+    # Desenha o texto
+    titleSurf, titleRect = makeTextObjs(text, WINNERFONT, YELLOW)
+    titleRect.center = (int(WINDOWWIDTH / 2) - 3, int(WINDOWHEIGHT / 2))
+    DISPLAYSURF.blit(titleSurf, titleRect)
+
+    # Desenha a sombra da String WINS THE ROUND
+    titleSurf, titleRect = makeTextObjs('WON THE ROUND!',WINNERFONT, BLACK)
+    titleRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2) + position - 3)
+    DISPLAYSURF.blit(titleSurf, titleRect)
+
+    # Desenha a string WINS THE ROUND
+    titleSurf, titleRect = makeTextObjs('WON THE ROUND!', WINNERFONT, YELLOW)
+    titleRect.center = (int(WINDOWWIDTH / 2) - 3, int(WINDOWHEIGHT / 2) + position)
+    DISPLAYSURF.blit(titleSurf, titleRect)
+
+    t = time.time()
+    x = t;
+
+    # Espera até alguma tecla ser apertada
+    while x - t < 3:
+        x = time.time()
+        pygame.display.update()
+        FPSCLOCK.tick()
+
 
 '''
 Função que cria um objeto com o texto.
@@ -495,6 +535,11 @@ def runGame():
                 # Atualiza o ultimo tempo de queda
                 lastFallTime = time.time()
 
+
+        # Limita o score máximo
+        if score > 999999:
+            score = 999999
+
         # Pinta o fundo de preto
         DISPLAYSURF.fill(BGCOLOR)
         # Pinta o background
@@ -516,7 +561,7 @@ def runGame():
             drawPiece(fallingPiece)
 
         # Desenha o display do inimigo
-        drawDisplayEnemy(board, score, level, clearLines, nextPiece, fallingPiece)
+        drawDisplayEnemy(board, score, level, clearLines, nextPiece, fallingPiece, "FELIPE")
        
         # Atualiza o displa
         pygame.display.update()
@@ -545,7 +590,8 @@ e o tempo para cair a próxima peça.
 '''
 def calculateLevelAndFallFreq(clearLines):
     
-    level = int(clearLines/10);
+    #level = int(clearLines/10);
+    level = 99
 
     if (level >= 0 and level <= 8):
         fallFreq = (48 - 5*level)/FPS
@@ -760,8 +806,17 @@ contendo a Pontuação e o Nível
 '''
 def drawStatus(score, level, lines):
     
+
+    pointSurf = ''
+
     # DIFERENÇA DE PONTUAÇAO
-    pointSurf = POINTSFONT.render('000000', False, GREEN)
+    diff = 0
+    if diff < 0:
+        diff = '-' + format(abs(diff), '06d')
+        pointSurf = POINTSFONT.render('%s' %diff, False, RED)
+    else:
+        diff = '+' + format(abs(diff), '06d')
+        pointSurf = POINTSFONT.render('%s' %diff, False, GREEN)
     pointRect = pointSurf.get_rect()
     pointRect.bottomright = (348, 105)
     DISPLAYSURF.blit(pointSurf, pointRect)
@@ -808,7 +863,7 @@ def drawStatus(score, level, lines):
     # Pinta o nome
     levelSurf = LINESFONT.render('%s' %NAME, False, TEXTCOLOR)
     levelRect = levelSurf.get_rect()
-    levelRect.center = (270,619)
+    levelRect.center = (XMARGIN + 100,619)
     DISPLAYSURF.blit(levelSurf, levelRect)
 
 '''
@@ -845,11 +900,11 @@ def drawPiece(piece, pixelx=None, pixely=None):
 '''
 Função que faz o processo de desenho do Display do adversário
 '''
-def drawDisplayEnemy(board, score, level, clearLines, nextPiece, fallingPiece):
+def drawDisplayEnemy(board, score, level, clearLines, nextPiece, fallingPiece, name):
     # Desenha o campo inimigo
     drawBoardEnemy(board)
     # Desenha a pontuação e o nivel do inimigo
-    drawStatusEnemy(score, level, clearLines)
+    drawStatusEnemy(score, level, clearLines, name)
     # Desenha a próxima peça do inimigo 
     drawNextPieceEnemy(nextPiece)
 
@@ -874,10 +929,20 @@ def drawBoardEnemy(board):
 '''
 Função que desenha os Status do inimigo
 '''
-def drawStatusEnemy(score, level, lines):
+def drawStatusEnemy(score, level, lines, name):
     
     # DIFERENÇA DE PONTUAÇAO
-    pointSurf = POINTSFONT.render('000000', False, GREEN)
+
+    pointSurf = ''
+
+    # DIFERENÇA DE PONTUAÇAO
+    diff = 0
+    if diff < 0:
+        diff = '-' + format(abs(diff), '06d')
+        pointSurf = POINTSFONT.render('%s' %diff, False, RED)
+    else:
+        diff = '+' + format(abs(diff), '06d')
+        pointSurf = POINTSFONT.render('%s' %diff, False, GREEN)
     pointRect = pointSurf.get_rect()
     pointRect.bottomright = (WINDOWWIDTH - XMARGIN - 23, 105)
     DISPLAYSURF.blit(pointSurf, pointRect)
@@ -922,9 +987,9 @@ def drawStatusEnemy(score, level, lines):
     DISPLAYSURF.blit(ROUNDS[0], (WINDOWWIDTH - 300, 632))    
 
     # Pinta o nome
-    levelSurf = LINESFONT.render('%s' %NAME, False, TEXTCOLOR)
+    levelSurf = LINESFONT.render('%s' %name, False, TEXTCOLOR)
     levelRect = levelSurf.get_rect()
-    levelRect.center = (WINDOWWIDTH - 270,619)
+    levelRect.center = (WINDOWWIDTH -XMARGIN - 100,619)
     DISPLAYSURF.blit(levelSurf, levelRect)
 
 '''
