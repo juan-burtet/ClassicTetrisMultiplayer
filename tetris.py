@@ -9,9 +9,9 @@
 import random, time, pygame, sys
 from pygame.locals import *
 
-FPS = 60
+FPS = 60.0988 
 WINDOWWIDTH = 800
-WINDOWHEIGHT = 600
+WINDOWHEIGHT = 680
 BOXSIZE = 20
 BOARDWIDTH = 10
 BOARDHEIGHT = 20
@@ -20,29 +20,18 @@ BLANK = '.'
 MOVESIDEWAYSFREQ = 0.15
 MOVEDOWNFREQ = 0.1
 
-XMARGIN = int((WINDOWWIDTH - BOARDWIDTH * BOXSIZE) / 2)
-TOPMARGIN = WINDOWHEIGHT - (BOARDHEIGHT * BOXSIZE) - 5
+XMARGIN = 171
+TOPMARGIN = 189
 
 #               R    G    B
 WHITE       = (255, 255, 255)
-GRAY        = (185, 185, 185)
 BLACK       = (  0,   0,   0)
-RED         = (155,   0,   0)
-LIGHTRED    = (175,  20,  20)
-GREEN       = (  0, 155,   0)
-LIGHTGREEN  = ( 20, 175,  20)
-BLUE        = (  0,   0, 155)
-LIGHTBLUE   = ( 20,  20, 175)
-YELLOW      = (155, 155,   0)
-LIGHTYELLOW = (175, 175,  20)
+RED         = (236,  17,  11)
+GREEN       = ( 29, 242,  10)
 
-BORDERCOLOR = BLUE
 BGCOLOR = BLACK
 TEXTCOLOR = WHITE
 TEXTSHADOWCOLOR = BLACK
-COLORS      = (     BLUE,      GREEN,      RED,      YELLOW)
-LIGHTCOLORS = (LIGHTBLUE, LIGHTGREEN, LIGHTRED, LIGHTYELLOW)
-assert len(COLORS) == len(LIGHTCOLORS) # each color must have light color
 
 TEMPLATEWIDTH = 5
 TEMPLATEHEIGHT = 5
@@ -72,15 +61,15 @@ Z_SHAPE_TEMPLATE = [['.....',
                      '.....']]
 
 # Peça I
-I_SHAPE_TEMPLATE = [['..O..',
-                     '..O..',
-                     '..O..',
-                     '..O..',
-                     '.....'],
-                    ['.....',
+I_SHAPE_TEMPLATE = [['.....',
                      '.....',
                      'OOOO.',
                      '.....',
+                     '.....'],
+                    ['..O..',
+                     '..O..',
+                     '..O..',
+                     '..O..',
                      '.....']]
 
 # Peça O
@@ -92,16 +81,6 @@ O_SHAPE_TEMPLATE = [['.....',
 
 # Peça J
 J_SHAPE_TEMPLATE = [['.....',
-                     '.O...',
-                     '.OOO.',
-                     '.....',
-                     '.....'],
-                    ['.....',
-                     '..OO.',
-                     '..O..',
-                     '..O..',
-                     '.....'],
-                    ['.....',
                      '.....',
                      '.OOO.',
                      '...O.',
@@ -110,20 +89,20 @@ J_SHAPE_TEMPLATE = [['.....',
                      '..O..',
                      '..O..',
                      '.OO..',
+                     '.....'],
+                    ['.....',
+                     '.O...',
+                     '.OOO.',
+                     '.....',
+                     '.....'],
+                    ['.....',
+                     '..OO.',
+                     '..O..',
+                     '..O..',
                      '.....']]
 
 # Peça L
 L_SHAPE_TEMPLATE = [['.....',
-                     '...O.',
-                     '.OOO.',
-                     '.....',
-                     '.....'],
-                    ['.....',
-                     '..O..',
-                     '..O..',
-                     '..OO.',
-                     '.....'],
-                    ['.....',
                      '.....',
                      '.OOO.',
                      '.O...',
@@ -132,20 +111,20 @@ L_SHAPE_TEMPLATE = [['.....',
                      '.OO..',
                      '..O..',
                      '..O..',
-                     '.....']]
-
-# Peça T
-T_SHAPE_TEMPLATE = [['.....',
-                     '..O..',
+                     '.....'],
+                    ['.....',
+                     '...O.',
                      '.OOO.',
                      '.....',
                      '.....'],
                     ['.....',
                      '..O..',
-                     '..OO.',
                      '..O..',
-                     '.....'],
-                    ['.....',
+                     '..OO.',
+                     '.....']]
+
+# Peça T
+T_SHAPE_TEMPLATE = [['.....',
                      '.....',
                      '.OOO.',
                      '..O..',
@@ -153,6 +132,16 @@ T_SHAPE_TEMPLATE = [['.....',
                     ['.....',
                      '..O..',
                      '.OO..',
+                     '..O..',
+                     '.....'],
+                    ['.....',
+                     '..O..',
+                     '.OOO.',
+                     '.....',
+                     '.....'],
+                    ['.....',
+                     '..O..',
+                     '..OO.',
                      '..O..',
                      '.....']]
 
@@ -165,11 +154,36 @@ PIECES = {'S': S_SHAPE_TEMPLATE,
           'O': O_SHAPE_TEMPLATE,
           'T': T_SHAPE_TEMPLATE}
 
+# Plano de Fundo
+BACKGROUND = pygame.image.load('Sprites/Background/background.png')
+
+# Sprites dos blocos
+BLOCKS = [[pygame.image.load('Sprites/Blocks/1A.png'), pygame.image.load('Sprites/Blocks/1B.png'), pygame.image.load('Sprites/Blocks/1C.png')],
+          [pygame.image.load('Sprites/Blocks/2A.png'), pygame.image.load('Sprites/Blocks/2B.png'), pygame.image.load('Sprites/Blocks/2C.png')],
+          [pygame.image.load('Sprites/Blocks/3A.png'), pygame.image.load('Sprites/Blocks/3B.png'), pygame.image.load('Sprites/Blocks/3C.png')],
+          [pygame.image.load('Sprites/Blocks/4A.png'), pygame.image.load('Sprites/Blocks/4B.png'), pygame.image.load('Sprites/Blocks/4C.png')],
+          [pygame.image.load('Sprites/Blocks/5A.png'), pygame.image.load('Sprites/Blocks/5B.png'), pygame.image.load('Sprites/Blocks/5C.png')],
+          [pygame.image.load('Sprites/Blocks/6A.png'), pygame.image.load('Sprites/Blocks/6B.png'), pygame.image.load('Sprites/Blocks/6C.png')],
+          [pygame.image.load('Sprites/Blocks/7A.png'), pygame.image.load('Sprites/Blocks/7B.png'), pygame.image.load('Sprites/Blocks/7C.png')],
+          [pygame.image.load('Sprites/Blocks/8A.png'), pygame.image.load('Sprites/Blocks/8B.png'), pygame.image.load('Sprites/Blocks/8C.png')],
+          [pygame.image.load('Sprites/Blocks/9A.png'), pygame.image.load('Sprites/Blocks/9B.png'), pygame.image.load('Sprites/Blocks/9C.png')],
+          [pygame.image.load('Sprites/Blocks/10A.png'), pygame.image.load('Sprites/Blocks/10B.png'), pygame.image.load('Sprites/Blocks/10C.png')]]
+
+# Sprites dos Rounds
+ROUNDS = [pygame.image.load('Sprites/Rounds/0.png'),
+          pygame.image.load('Sprites/Rounds/1.png'),
+          pygame.image.load('Sprites/Rounds/2.png'),
+          pygame.image.load('Sprites/Rounds/3.png')]
+
+
+level = 0
+
 '''
 Função main.
 '''
 def main():
-    global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT
+    global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT, SCOREFONT, POINTSFONT
+    global LINESFONT, NAME
     
     # Inicializa o pygame
     pygame.init()
@@ -181,6 +195,16 @@ def main():
     BASICFONT = pygame.font.Font('Fonts/ARCADECLASSIC.TTF', 18)
     # Fonte para letras grandes
     BIGFONT = pygame.font.Font('Fonts/ARCADECLASSIC.TTF', 100)
+
+    
+
+    SCOREFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 24)
+    POINTSFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 28)
+    LINESFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 26)
+    NAME = 'JUAN'
+
+
+
     # Seta o nome da Janela
     pygame.display.set_caption('Classic Tetris Multiplayer')
 
@@ -293,8 +317,12 @@ def runGame():
     # Inicializa a pontuação
     score = 0
 
+    # Quantidade de linhas cortadas
+    clearLines = 0
+
+
     # Calcula o nivel e a frequência de queda
-    level, fallFreq = calculateLevelAndFallFreq(score)
+    level, fallFreq = calculateLevelAndFallFreq(clearLines)
 
     # Inicializa a peça que vai cair
     fallingPiece = getNewPiece()
@@ -448,9 +476,9 @@ def runGame():
                 # Adiciona a peça ao tabuleiro
                 addToBoard(board, fallingPiece)
                 # Remove as peças completadas adicionando a pontuação
-                score += removeCompleteLines(board)
+                score, clearLines += removeCompleteLines(board)
                 # Calcula o novo nivel e frequência de queda
-                level, fallFreq = calculateLevelAndFallFreq(score)
+                level, fallFreq = calculateLevelAndFallFreq(clearLines)
                 # Não tem nenhuma peça caindo
                 fallingPiece = None
 
@@ -465,6 +493,10 @@ def runGame():
 
         # Desenha o fundo na tela
         DISPLAYSURF.fill(BGCOLOR)
+
+        DISPLAYSURF.blit(BACKGROUND, (0, 0))
+
+
         # Desenha o campo
         drawBoard(board)
         # Desenha a pontuação e o nivel
@@ -502,12 +534,24 @@ def getBlankBoard():
 Função que retorna o nivel que o jogador e
 e o tempo para cair a próxima peça.
 '''
-def calculateLevelAndFallFreq(score):
+def calculateLevelAndFallFreq(clearLines):
     
-    # Cálculo do nivel
-    level = int(score / 10) + 1
-    # Cálculo do tempo de queda da peça
-    fallFreq = 0.27 - (level * 0.02)
+    level = int(clearLines/10);
+
+    if (level >= 0 and level <= 8)
+        fallFreq = (48 - 5*level)/FPS
+    elif (level == 9)
+        fallFreq = 6/FPS
+    elif (level >= 10 and level <= 12)
+        fallFreq = 5/FPS
+    elif (level >= 13 and level <= 15)
+        fallFreq = 4/FPS
+    elif (level >= 16 and level <= 18)
+        fallFreq = 3/FPS
+    elif (level >= 19 and level <= 28)
+        fallFreq = 2/FPS
+    elif (level >= 29)
+        fallFreq = 1/FPS
 
     return level, fallFreq
 
@@ -523,13 +567,29 @@ def getNewPiece():
 
     # Nova peça é um dict:
     newPiece = {'shape': shape, # Com formato
-                'rotation': random.randint(0, len(PIECES[shape]) - 1), # Rotação
+                'rotation': 0, # Rotação
                 'x': int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), # Posição de x no campo
                 'y': -2, # Posição de y no campo
-                'color': random.randint(0, len(COLORS)-1)} # Cor aleatória
+                'color': getColor(shape)} # Cor aleatória
 
     # Retorna a nova peça
     return newPiece
+
+'''
+Função que retorna a cor da peça
+'''
+def getColor(shape):
+    
+    # Se for a peça T, O ou I, retorna a cor 'A'
+    if shape == 'T' or shape == 'O' or shape == 'I':
+        return 0
+
+    # Se for a peça J ou S, retorna a cor 'B' 
+    if shape == 'J' or shape == 'S':
+        return 1
+
+    # É a peça Z ou L, retorna a cor 'C'
+    return 2
 
 '''
 Função que verifica se a peça está em uma posição valida
@@ -639,9 +699,6 @@ Função que desenha o campo do jogo
 '''
 def drawBoard(board):
     
-    # Desenha a borda em volta do campo
-    pygame.draw.rect(DISPLAYSURF, BORDERCOLOR, (XMARGIN - 3, TOPMARGIN - 7, (BOARDWIDTH * BOXSIZE) + 8, (BOARDHEIGHT * BOXSIZE) + 8), 5)
-
     # Preenche o interior do campo com a cor do fundo
     pygame.draw.rect(DISPLAYSURF, BGCOLOR, (XMARGIN, TOPMARGIN, BOXSIZE * BOARDWIDTH, BOXSIZE * BOARDHEIGHT))
 
@@ -665,10 +722,14 @@ def drawBox(boxx, boxy, color, pixelx=None, pixely=None):
         # Converte a posição do campo para a posição dos Pixels
         pixelx, pixely = convertToPixelCoords(boxx, boxy)
 
+
+    DISPLAYSURF.blit(BLOCKS[level % 10][color], (pixelx + 1, pixely + 1))
+
+
     # Desenha o retângulo com sua cor
-    pygame.draw.rect(DISPLAYSURF, COLORS[color], (pixelx + 1, pixely + 1, BOXSIZE - 1, BOXSIZE - 1))
+    #pygame.draw.rect(DISPLAYSURF, COLORS[color], (pixelx + 1, pixely + 1, BOXSIZE - 1, BOXSIZE - 1))
     # Desenha o retângulo com sua cor clara
-    pygame.draw.rect(DISPLAYSURF, LIGHTCOLORS[color], (pixelx + 1, pixely + 1, BOXSIZE - 4, BOXSIZE - 4))
+    #pygame.draw.rect(DISPLAYSURF, LIGHTCOLORS[color], (pixelx + 1, pixely + 1, BOXSIZE - 4, BOXSIZE - 4))
 
 '''
 Função que converte a Posição do campo
@@ -684,16 +745,55 @@ contendo a Pontuação e o Nível
 '''
 def drawStatus(score, level):
     
-    # Pinta a string SCORE com a sua pontuação
-    scoreSurf = BASICFONT.render('SCORE %s' % score, True, TEXTCOLOR)
+    # DIFERENÇA DE PONTUAÇAO
+    pointSurf = POINTSFONT.render('000000', False, GREEN)
+    pointRect = pointSurf.get_rect()
+    pointRect.bottomright = (348, 105)
+    DISPLAYSURF.blit(pointSurf, pointRect)
+
+    # PONTUAÇÃO
+    point2Surf = POINTSFONT.render('%s' %format(score, '06d'), False, WHITE)
+    point2Rect = point2Surf.get_rect()
+    point2Rect.bottomright = (348, 80)
+    DISPLAYSURF.blit(point2Surf, point2Rect)
+
+    # Pinta a string SCORE 
+    scoreSurf = SCOREFONT.render('SCORE', False, WHITE)
     scoreRect = scoreSurf.get_rect()
-    scoreRect.topleft = (WINDOWWIDTH - 150, 20)
+    scoreRect.topleft = (232, 20)
     DISPLAYSURF.blit(scoreSurf, scoreRect)
 
-    # Pinta a string LEVEL com seu nível
-    levelSurf = BASICFONT.render('LEVEL %s' % level, True, TEXTCOLOR)
+    # Pinta a string LINE
+    linesSurf = LINESFONT.render('LINE', False, WHITE)
+    linesRect = linesSurf.get_rect()
+    linesRect.topleft = (180, 117)
+    DISPLAYSURF.blit(linesSurf, linesRect)
+
+    # Pinta a quantidade de Linhas
+    qtLinesSurf = SCOREFONT.render('000', False, WHITE)
+    qtLinesRect = qtLinesSurf.get_rect()
+    qtLinesRect.topleft = (190, 140)
+    DISPLAYSURF.blit(qtLinesSurf, qtLinesRect)
+
+    # Pinta a string LEVEL
+    levelSurf = LINESFONT.render('LVL', False, TEXTCOLOR)
     levelRect = levelSurf.get_rect()
-    levelRect.topleft = (WINDOWWIDTH - 150, 50)
+    levelRect.topleft = (92,602)
+    DISPLAYSURF.blit(levelSurf, levelRect)
+
+    # Pinta o Nível
+    levelSurf = LINESFONT.render('%s' %format(level, '02d'), False, TEXTCOLOR)
+    levelRect = levelSurf.get_rect()
+    levelRect.center = (120,640)
+    DISPLAYSURF.blit(levelSurf, levelRect)
+
+    # Pinta os Rounds
+    DISPLAYSURF.blit(ROUNDS[0], (235, 632))    
+
+    # Pinta o nome
+    levelSurf = LINESFONT.render('%s' %NAME, False, TEXTCOLOR)
+    levelRect = levelSurf.get_rect()
+    levelRect.center = (270,619)
     DISPLAYSURF.blit(levelSurf, levelRect)
 
 '''
@@ -701,14 +801,8 @@ Função que desenha a próxima peça
 '''
 def drawNextPiece(piece):
     
-    # Pinta a string NEXT na tela
-    nextSurf = BASICFONT.render('NEXT', True, TEXTCOLOR)
-    nextRect = nextSurf.get_rect()
-    nextRect.topleft = (WINDOWWIDTH - 120, 80)
-    DISPLAYSURF.blit(nextSurf, nextRect)
-
     # Pinta a próxima peça
-    drawPiece(piece, pixelx=WINDOWWIDTH-120, pixely=100)
+    drawPiece(piece, pixelx=280, pixely=85)
 
 '''
 Função que desenha uma peça na Tela
