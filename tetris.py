@@ -17,7 +17,7 @@ BOARDWIDTH = 10
 BOARDHEIGHT = 20
 BLANK = '.'
 
-MOVESIDEWAYSFREQ = 0.15
+MOVESIDEWAYSFREQ = 0.1
 MOVEDOWNFREQ = 0.1
 
 XMARGIN = 171
@@ -175,9 +175,6 @@ ROUNDS = [pygame.image.load('Sprites/Rounds/0.png'),
           pygame.image.load('Sprites/Rounds/2.png'),
           pygame.image.load('Sprites/Rounds/3.png')]
 
-
-level = 0
-
 '''
 Função main.
 '''
@@ -192,12 +189,11 @@ def main():
     # Seta o tamanho da tela
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
     # Fonte para letras pequenas
-    BASICFONT = pygame.font.Font('Fonts/ARCADECLASSIC.TTF', 18)
+    BASICFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 18)
     # Fonte para letras grandes
-    BIGFONT = pygame.font.Font('Fonts/ARCADECLASSIC.TTF', 100)
+    BIGFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 100)
 
     
-
     SCOREFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 24)
     POINTSFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 28)
     LINESFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 26)
@@ -300,7 +296,7 @@ def terminate():
 Função utilizada para rodar o jogo.
 '''
 def runGame():
-    
+    global level
     # Inicializa o jogo
     board = getBlankBoard()
 
@@ -475,8 +471,16 @@ def runGame():
                 
                 # Adiciona a peça ao tabuleiro
                 addToBoard(board, fallingPiece)
-                # Remove as peças completadas adicionando a pontuação
-                score, clearLines += removeCompleteLines(board)
+                
+                # Remove as peças completadas recebendo uma tupla 
+                # contendo a (pontuação, linhasEliminadas)
+                x = removeCompleteLines(board)
+
+                # Somou os pontos
+                score += x[0]
+                # Somou as linhas
+                clearLines += x[1]
+
                 # Calcula o novo nivel e frequência de queda
                 level, fallFreq = calculateLevelAndFallFreq(clearLines)
                 # Não tem nenhuma peça caindo
@@ -491,17 +495,19 @@ def runGame():
                 # Atualiza o ultimo tempo de queda
                 lastFallTime = time.time()
 
-        # Desenha o fundo na tela
+        # Pinta o fundo de preto
         DISPLAYSURF.fill(BGCOLOR)
-
+        # Pinta o background
         DISPLAYSURF.blit(BACKGROUND, (0, 0))
 
-
+        '''
+        Display do Player
+        '''
         # Desenha o campo
         drawBoard(board)
         # Desenha a pontuação e o nivel
-        drawStatus(score, level)
-        # Desemja a próxima peça
+        drawStatus(score, level, clearLines)
+        # Desenha a próxima peça
         drawNextPiece(nextPiece)
 
         # Se tiver uma peça caindo
@@ -509,6 +515,9 @@ def runGame():
             # Desenha a peça caindo
             drawPiece(fallingPiece)
 
+        # Desenha o display do inimigo
+        drawDisplayEnemy(board, score, level, clearLines, nextPiece, fallingPiece)
+       
         # Atualiza o displa
         pygame.display.update()
 
@@ -536,21 +545,21 @@ e o tempo para cair a próxima peça.
 '''
 def calculateLevelAndFallFreq(clearLines):
     
-    level = int(clearLines/10);
+    level = int(clearLines);
 
-    if (level >= 0 and level <= 8)
+    if (level >= 0 and level <= 8):
         fallFreq = (48 - 5*level)/FPS
-    elif (level == 9)
+    elif (level == 9):
         fallFreq = 6/FPS
-    elif (level >= 10 and level <= 12)
+    elif (level >= 10 and level <= 12):
         fallFreq = 5/FPS
-    elif (level >= 13 and level <= 15)
+    elif (level >= 13 and level <= 15):
         fallFreq = 4/FPS
-    elif (level >= 16 and level <= 18)
+    elif (level >= 16 and level <= 18):
         fallFreq = 3/FPS
-    elif (level >= 19 and level <= 28)
+    elif (level >= 19 and level <= 28):
         fallFreq = 2/FPS
-    elif (level >= 29)
+    elif (level >= 29):
         fallFreq = 1/FPS
 
     return level, fallFreq
@@ -676,8 +685,20 @@ def removeCompleteLines(board):
             # Sobre uma posição
             y -= 1 
 
-    # Retorna o número de linhas removidas
-    return numLinesRemoved
+    # Pontuação pelas linhas eliminadas
+    score = 0
+    if numLinesRemoved == 1:
+        score = 40 * (level + 1)
+    elif numLinesRemoved == 2:
+        score = 100 * (level + 1)
+    elif numLinesRemoved == 3:
+        score = 300 * (level + 1)
+    elif numLinesRemoved == 4:
+        score = 1200 * (level + 1)
+
+    # Retorna uma tupla com os pontos e a 
+    # quantidade de linhas removidas
+    return (score, numLinesRemoved)
 
 '''
 Função que verifica se uma linha está completa
@@ -722,14 +743,8 @@ def drawBox(boxx, boxy, color, pixelx=None, pixely=None):
         # Converte a posição do campo para a posição dos Pixels
         pixelx, pixely = convertToPixelCoords(boxx, boxy)
 
-
+    # Pinta o quadrado com a textura correta
     DISPLAYSURF.blit(BLOCKS[level % 10][color], (pixelx + 1, pixely + 1))
-
-
-    # Desenha o retângulo com sua cor
-    #pygame.draw.rect(DISPLAYSURF, COLORS[color], (pixelx + 1, pixely + 1, BOXSIZE - 1, BOXSIZE - 1))
-    # Desenha o retângulo com sua cor clara
-    #pygame.draw.rect(DISPLAYSURF, LIGHTCOLORS[color], (pixelx + 1, pixely + 1, BOXSIZE - 4, BOXSIZE - 4))
 
 '''
 Função que converte a Posição do campo
@@ -743,7 +758,7 @@ def convertToPixelCoords(boxx, boxy):
 Função que desenha o Status do jogo
 contendo a Pontuação e o Nível
 '''
-def drawStatus(score, level):
+def drawStatus(score, level, lines):
     
     # DIFERENÇA DE PONTUAÇAO
     pointSurf = POINTSFONT.render('000000', False, GREEN)
@@ -770,7 +785,7 @@ def drawStatus(score, level):
     DISPLAYSURF.blit(linesSurf, linesRect)
 
     # Pinta a quantidade de Linhas
-    qtLinesSurf = SCOREFONT.render('000', False, WHITE)
+    qtLinesSurf = SCOREFONT.render('%s' %format(lines, '03d'), False, WHITE)
     qtLinesRect = qtLinesSurf.get_rect()
     qtLinesRect.topleft = (190, 140)
     DISPLAYSURF.blit(qtLinesSurf, qtLinesRect)
@@ -825,4 +840,144 @@ def drawPiece(piece, pixelx=None, pixely=None):
                 # Pinta a peça na tela
                 drawBox(None, None, piece['color'], pixelx + (x * BOXSIZE), pixely + (y * BOXSIZE))
 
+#######################################################################################
 
+'''
+Função que faz o processo de desenho do Display do adversário
+'''
+def drawDisplayEnemy(board, score, level, clearLines, nextPiece, fallingPiece):
+    # Desenha o campo inimigo
+    drawBoardEnemy(board)
+    # Desenha a pontuação e o nivel do inimigo
+    drawStatusEnemy(score, level, clearLines)
+    # Desenha a próxima peça do inimigo 
+    drawNextPieceEnemy(nextPiece)
+
+    # Se tiver uma peça caindo do inimigo
+    if fallingPiece != None:
+        # Desenha a peça caindo do inimigo
+        drawPieceEnemy(fallingPiece)    
+
+'''
+Função que desenha o campo do inimigo
+'''
+def drawBoardEnemy(board):
+    
+    # Preenche o interior do campo com a cor do fundo
+    pygame.draw.rect(DISPLAYSURF, BGCOLOR, (WINDOWWIDTH -XMARGIN - 200, TOPMARGIN, BOXSIZE * BOARDWIDTH, BOXSIZE * BOARDHEIGHT))
+
+    # Pinta cada quadrado separadamente
+    for x in range(BOARDWIDTH):
+        for y in range(BOARDHEIGHT):
+            drawBoxEnemy(x, y, board[x][y])
+
+'''
+Função que desenha os Status do inimigo
+'''
+def drawStatusEnemy(score, level, lines):
+    
+    # DIFERENÇA DE PONTUAÇAO
+    pointSurf = POINTSFONT.render('000000', False, GREEN)
+    pointRect = pointSurf.get_rect()
+    pointRect.bottomright = (WINDOWWIDTH - XMARGIN - 23, 105)
+    DISPLAYSURF.blit(pointSurf, pointRect)
+
+    # PONTUAÇÃO
+    point2Surf = POINTSFONT.render('%s' %format(score, '06d'), False, WHITE)
+    point2Rect = point2Surf.get_rect()
+    point2Rect.bottomright= (WINDOWWIDTH - XMARGIN - 23, 80)
+    DISPLAYSURF.blit(point2Surf, point2Rect)
+
+    # Pinta a string SCORE 
+    scoreSurf = SCOREFONT.render('SCORE', False, WHITE)
+    scoreRect = scoreSurf.get_rect()
+    scoreRect.topright = (WINDOWWIDTH - 213, 20)
+    DISPLAYSURF.blit(scoreSurf, scoreRect)
+
+    # Pinta a string LINE
+    linesSurf = LINESFONT.render('LINE', False, WHITE)
+    linesRect = linesSurf.get_rect()
+    linesRect.topright = (WINDOWWIDTH - 285, 117)
+    DISPLAYSURF.blit(linesSurf, linesRect)
+
+    # Pinta a quantidade de Linhas
+    qtLinesSurf = SCOREFONT.render('%s' %format(lines, '03d'), False, WHITE)
+    qtLinesRect = qtLinesSurf.get_rect()
+    qtLinesRect.topright = (WINDOWWIDTH -  295, 140)
+    DISPLAYSURF.blit(qtLinesSurf, qtLinesRect)
+
+    # Pinta a string LEVEL
+    levelSurf = LINESFONT.render('LVL', False, TEXTCOLOR)
+    levelRect = levelSurf.get_rect()
+    levelRect.topright = (WINDOWWIDTH - 89,602)
+    DISPLAYSURF.blit(levelSurf, levelRect)
+
+    # Pinta o Nível
+    levelSurf = LINESFONT.render('%s' %format(level, '02d'), False, TEXTCOLOR)
+    levelRect = levelSurf.get_rect()
+    levelRect.center = (WINDOWWIDTH - 117,640)
+    DISPLAYSURF.blit(levelSurf, levelRect)
+
+    # Pinta os Rounds
+    DISPLAYSURF.blit(ROUNDS[0], (WINDOWWIDTH - 300, 632))    
+
+    # Pinta o nome
+    levelSurf = LINESFONT.render('%s' %NAME, False, TEXTCOLOR)
+    levelRect = levelSurf.get_rect()
+    levelRect.center = (WINDOWWIDTH - 270,619)
+    DISPLAYSURF.blit(levelSurf, levelRect)
+
+'''
+Função que desenha a próxima peça do inimigo
+'''
+def drawNextPieceEnemy(piece):
+
+    # Pinta a próxima peça
+    drawPiece(piece, pixelx=WINDOWWIDTH - 260, pixely=85)
+
+'''
+Função que desenha a próxima peça do inimigo
+'''
+def drawPieceEnemy(piece, pixelx=None, pixely=None):
+    
+   # Qual peça precisa ser pintada
+    shapeToDraw = PIECES[piece['shape']][piece['rotation']]
+    
+    # Se a posição não foi especificada
+    if pixelx == None and pixely == None:
+        # Pega a posição armazenada na peça
+        pixelx, pixely = convertToPixelCoordsEnemy(piece['x'], piece['y'])
+
+    # Percorre por todo o template da peça
+    for x in range(TEMPLATEWIDTH):
+        for y in range(TEMPLATEHEIGHT):
+            # Se a posição não for vazia
+            if shapeToDraw[y][x] != BLANK:
+                # Pinta a peça na tela
+                drawBoxEnemy(None, None, piece['color'], pixelx + (x * BOXSIZE), pixely + (y * BOXSIZE))
+
+'''
+Função que converte a posição do campo inimigo
+para a posição do Pixel na tela
+'''
+def convertToPixelCoordsEnemy(boxx, boxy):
+    # Retorna a posição do Pixel
+    return (WINDOWWIDTH - XMARGIN - 200 + (boxx * BOXSIZE)), (TOPMARGIN + (boxy * BOXSIZE))
+
+'''
+Função que desenha um quadrado das peças do inimigo
+'''
+def drawBoxEnemy(boxx, boxy, color, pixelx=None, pixely=None):
+    
+    # Se a cor for vazio, nao pinta
+    if color == BLANK:
+        return
+
+    # Se pixelx e pixely não foi especificado,
+    # retorna a posição correta no tabuleiro
+    if pixelx == None and pixely == None:
+        # Converte a posição do campo para a posição dos Pixels
+        pixelx, pixely = convertToPixelCoordsEnemy(boxx, boxy)
+
+    # Pinta o quadrado com a textura correta
+    DISPLAYSURF.blit(BLOCKS[level % 10][color], (pixelx + 1, pixely + 1))
