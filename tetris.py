@@ -545,7 +545,7 @@ e o tempo para cair a próxima peça.
 '''
 def calculateLevelAndFallFreq(clearLines):
     
-    level = int(clearLines);
+    level = int(clearLines/10);
 
     if (level >= 0 and level <= 8):
         fallFreq = (48 - 5*level)/FPS
