@@ -1,3 +1,4 @@
+from tetris import *
 
 '''
 Classe inimigo que possui as informações do adversário
@@ -28,12 +29,50 @@ class Enemy:
 		self.state = False
 
 	'''
+	Método que retorna um dict com os status
+	'''
+	def getStatus(self):
+		# Dict com status
+		status = {'name'		: self.name,
+				  'score'		: self.score,
+				  'level'		: self.level,
+				  'lines'		: self.lines,
+				  'fallingPiece': self.fallingPiece,
+				  'nextPiece'	: self.nextPiece,
+				  'board'		: self.board,
+				  'wins'		: self.wins,
+				  'state'		: self.state}
+
+		# Retorna um dict com os status
+		return status
+
+	'''
 	Método que adiciona o
 	nome do inimigo
-	'''
+	'''	
 	def setName(self, name):
 		self.name = name
- 
+ 	
+	#Método que reseta os Status do inimigo
+	def reset(self):
+		self.score = 0
+		self.level = 0
+		self.lines = 0
+		self.fallingPiece = None
+		self.nextPiece = None
+		self.board = []
+		self.state = False
+
+	'''
+	Método para atualizar o status do inimigo
+	'''
+	def update(self, score, level, lines, fallingPiece, nextPiece, board):
+		self.score = score
+		self.level = level
+		self.fallingPiece = fallingPiece
+		self.nextPiece = nextPiece
+		self.board = board
+		
 	'''
 	Método que retorna o
 	nome do inimigo
