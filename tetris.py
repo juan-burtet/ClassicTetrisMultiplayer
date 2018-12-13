@@ -6,7 +6,7 @@
 # http://inventwithpython.com/pygame
 # Released under a "Simplified BSD" license
 
-import random, time, pygame, sys
+import random, time, pygame, sys, Enemy
 from pygame.locals import *
 
 FPS = 60.0988 
@@ -29,6 +29,10 @@ BLACK       = (  0,   0,   0)
 RED         = (236,  17,  11)
 GREEN       = ( 29, 242,  10)
 YELLOW      = (253, 228, 129)
+GREEN_LOGO  = ( 92, 228,  48)
+RED_LOGO    = (181,  49,  32)
+BLUE_LOGO   = (100, 176, 255)
+YELLOW_LOGO = (228, 229, 148)
 
 BGCOLOR = BLACK
 TEXTCOLOR = WHITE
@@ -155,6 +159,9 @@ PIECES = {'S': S_SHAPE_TEMPLATE,
           'O': O_SHAPE_TEMPLATE,
           'T': T_SHAPE_TEMPLATE}
 
+# Tela Inicial
+STARTSCREEN = pygame.image.load('Sprites/Background/startscreen.png')
+
 # Plano de Fundo
 BACKGROUND = pygame.image.load('Sprites/Background/background.png')
 
@@ -181,7 +188,7 @@ Função main.
 '''
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT, SCOREFONT, POINTSFONT
-    global LINESFONT, NAME, WINNERFONT
+    global LINESFONT, NAME, WINNERFONT, enemy
     
     # Inicializa o pygame
     pygame.init()
@@ -204,11 +211,14 @@ def main():
     # Nome do Player 1
     NAME = 'JUAN'
 
+    enemy = Enemy.Enemy()
+    enemy.setName('FELIPE')
+
     # Seta o nome da Janela
     pygame.display.set_caption('Classic Tetris Multiplayer')
 
-    # Inicializa a tela inicial
-    showTextScreen('TETRIS')
+    # Inicializa com a tela inicial
+    showStartScreen()
     
     # Loop do jogo
     while True:
@@ -216,6 +226,60 @@ def main():
         runGame()
         # Dá o nome do vencedor
         showWinnerScreen('FELIPE')
+
+'''
+Função que desenha a tela de inicio
+'''
+def showStartScreen():
+    # Pinta o Fundo
+    DISPLAYSURF.blit(STARTSCREEN, (0, 0))
+
+    # Desenha o ano
+    titleSurf, titleRect = makeTextObjs('2018', POINTSFONT, TEXTCOLOR)
+    titleRect.center = (int(WINDOWWIDTH/2) - 90, WINDOWHEIGHT - 105)
+    DISPLAYSURF.blit(titleSurf, titleRect)
+
+    # Desenha o Pygame
+    titleSurf, titleRect = makeTextObjs('PYGAME', POINTSFONT, TEXTCOLOR)
+    titleRect.center = (int(WINDOWWIDTH/2) + 90, WINDOWHEIGHT - 105)
+    DISPLAYSURF.blit(titleSurf, titleRect)
+
+    # Tempos para as cores
+    x = time.time()
+
+    # Espera até alguma tecla ser apertada
+    while checkForKeyPress() == None:
+        # tempo atual
+        t = time.time()
+
+        # Troca de cor do PUSH ENTER
+        color_1 = WHITE
+        if(int((t - x) * 3) % 2):
+            color_1 = BLACK
+
+        # Troca de cor do MULTIPLAYER
+        color_2 = GREEN_LOGO
+        value = int((t - x)) % 4
+        if (value == 1):
+            color_2 = RED_LOGO
+        elif (value == 2):
+            color_2 = BLUE_LOGO
+        elif (value == 3):
+            color_2 = YELLOW_LOGO
+
+        # Desenha o Multiplayer
+        titleSurf, titleRect = makeTextObjs('MULTIPLAYER', POINTSFONT, color_2)
+        titleRect.center = (int(WINDOWWIDTH/2) + 160, int(WINDOWHEIGHT/2) - 13)
+        DISPLAYSURF.blit(titleSurf, titleRect)
+
+        # Desenha o PUSH ENTER
+        titleSurf, titleRect = makeTextObjs('PUSH ENTER', POINTSFONT, color_1)
+        titleRect.center = (int(WINDOWWIDTH/2) - 100, int(WINDOWHEIGHT/2) + 120)
+        DISPLAYSURF.blit(titleSurf, titleRect)
+
+        # Atualiza o display
+        pygame.display.update()
+        FPSCLOCK.tick()
 
 '''
 Função que mostra um texto grande no meio.
@@ -278,12 +342,11 @@ def showWinnerScreen(text):
         pygame.display.update()
         FPSCLOCK.tick()
 
-
 '''
 Função que cria um objeto com o texto.
 '''
 def makeTextObjs(text, font, color):
-    surf = font.render(text, True, color)
+    surf = font.render(text, False, color)
     return surf, surf.get_rect()
 
 '''
@@ -356,7 +419,6 @@ def runGame():
     # Quantidade de linhas cortadas
     clearLines = 0
 
-
     # Calcula o nivel e a frequência de queda
     level, fallFreq = calculateLevelAndFallFreq(clearLines)
 
@@ -366,6 +428,7 @@ def runGame():
     # Inicializa a peça que vai ser a seguinte
     nextPiece = getNewPiece()
 
+    enemy.reset()
     # Loop da partida
     while True:
 
@@ -545,9 +608,6 @@ def runGame():
         # Pinta o background
         DISPLAYSURF.blit(BACKGROUND, (0, 0))
 
-        '''
-        Display do Player
-        '''
         # Desenha o campo
         drawBoard(board)
         # Desenha a pontuação e o nivel
@@ -560,8 +620,13 @@ def runGame():
             # Desenha a peça caindo
             drawPiece(fallingPiece)
 
+        # Atualiza o inimigo
+        enemy.update(score, level, clearLines, fallingPiece, nextPiece, board)
+        
+        #enemy.draw()
+
         # Desenha o display do inimigo
-        drawDisplayEnemy(board, score, level, clearLines, nextPiece, fallingPiece, "FELIPE")
+        #drawDisplayEnemy(board, score, level, clearLines, nextPiece, fallingPiece, "FELIPE")
        
         # Atualiza o displa
         pygame.display.update()
@@ -777,7 +842,7 @@ def drawBoard(board):
 '''
 Função que pinta um quadrado da peça
 '''
-def drawBox(boxx, boxy, color, pixelx=None, pixely=None):
+def drawBox(boxx, boxy, color, pixelx=None, pixely=None, nextPiece=False):
     
     # Se a cor for vazio, nao pinta
     if color == BLANK:
@@ -789,8 +854,10 @@ def drawBox(boxx, boxy, color, pixelx=None, pixely=None):
         # Converte a posição do campo para a posição dos Pixels
         pixelx, pixely = convertToPixelCoords(boxx, boxy)
 
-    # Pinta o quadrado com a textura correta
-    DISPLAYSURF.blit(BLOCKS[level % 10][color], (pixelx + 1, pixely + 1))
+    # Garante que não seja pintado fora do campo
+    if(pixely + 1 > TOPMARGIN or nextPiece):
+        # Pinta o quadrado com a textura correta
+        DISPLAYSURF.blit(BLOCKS[level % 10][color], (pixelx + 1, pixely + 1))
 
 '''
 Função que converte a Posição do campo
@@ -872,12 +939,12 @@ Função que desenha a próxima peça
 def drawNextPiece(piece):
     
     # Pinta a próxima peça
-    drawPiece(piece, pixelx=280, pixely=85)
+    drawPiece(piece, pixelx=280, pixely=85, nextPiece=True)
 
 '''
 Função que desenha uma peça na Tela
 '''
-def drawPiece(piece, pixelx=None, pixely=None):
+def drawPiece(piece, pixelx=None, pixely=None, nextPiece=False):
     
     # Qual peça precisa ser pintada
     shapeToDraw = PIECES[piece['shape']][piece['rotation']]
@@ -893,7 +960,7 @@ def drawPiece(piece, pixelx=None, pixely=None):
             # Se a posição não for vazia
             if shapeToDraw[y][x] != BLANK:
                 # Pinta a peça na tela
-                drawBox(None, None, piece['color'], pixelx + (x * BOXSIZE), pixely + (y * BOXSIZE))
+                drawBox(None, None, piece['color'], pixelx + (x * BOXSIZE), pixely + (y * BOXSIZE), nextPiece=nextPiece)
 
 #######################################################################################
 
@@ -901,6 +968,12 @@ def drawPiece(piece, pixelx=None, pixely=None):
 Função que faz o processo de desenho do Display do adversário
 '''
 def drawDisplayEnemy(board, score, level, clearLines, nextPiece, fallingPiece, name):
+    board = status['board']
+    score = status['score']
+    level = status['level']
+    clearLines = status['lines']
+
+
     # Desenha o campo inimigo
     drawBoardEnemy(board)
     # Desenha a pontuação e o nivel do inimigo
@@ -995,15 +1068,15 @@ def drawStatusEnemy(score, level, lines, name):
 '''
 Função que desenha a próxima peça do inimigo
 '''
-def drawNextPieceEnemy(piece):
+def drawNextPieceEnemy(piece, nextPiece=False):
 
     # Pinta a próxima peça
-    drawPiece(piece, pixelx=WINDOWWIDTH - 260, pixely=85)
+    drawPiece(piece, pixelx=WINDOWWIDTH - 260, pixely=85, nextPiece=True)
 
 '''
 Função que desenha a próxima peça do inimigo
 '''
-def drawPieceEnemy(piece, pixelx=None, pixely=None):
+def drawPieceEnemy(piece, pixelx=None, pixely=None, nextPiece=False):
     
    # Qual peça precisa ser pintada
     shapeToDraw = PIECES[piece['shape']][piece['rotation']]
@@ -1019,7 +1092,7 @@ def drawPieceEnemy(piece, pixelx=None, pixely=None):
             # Se a posição não for vazia
             if shapeToDraw[y][x] != BLANK:
                 # Pinta a peça na tela
-                drawBoxEnemy(None, None, piece['color'], pixelx + (x * BOXSIZE), pixely + (y * BOXSIZE))
+                drawBoxEnemy(None, None, piece['color'], pixelx + (x * BOXSIZE), pixely + (y * BOXSIZE), nextPiece=nextPiece)
 
 '''
 Função que converte a posição do campo inimigo
@@ -1032,7 +1105,7 @@ def convertToPixelCoordsEnemy(boxx, boxy):
 '''
 Função que desenha um quadrado das peças do inimigo
 '''
-def drawBoxEnemy(boxx, boxy, color, pixelx=None, pixely=None):
+def drawBoxEnemy(boxx, boxy, color, pixelx=None, pixely=None, nextPiece=False):
     
     # Se a cor for vazio, nao pinta
     if color == BLANK:
@@ -1044,5 +1117,7 @@ def drawBoxEnemy(boxx, boxy, color, pixelx=None, pixely=None):
         # Converte a posição do campo para a posição dos Pixels
         pixelx, pixely = convertToPixelCoordsEnemy(boxx, boxy)
 
-    # Pinta o quadrado com a textura correta
-    DISPLAYSURF.blit(BLOCKS[level % 10][color], (pixelx + 1, pixely + 1))
+    # Garante que não seja pintado fora do campo
+    if(pixely + 1 > TOPMARGIN or nextPiece):
+        # Pinta o quadrado com a textura correta
+        DISPLAYSURF.blit(BLOCKS[level % 10][color], (pixelx + 1, pixely + 1))
