@@ -209,7 +209,7 @@ def main():
 
     # Inicializa a tela inicial
     showTextScreen('TETRIS')
-
+    
     # Loop do jogo
     while True:
         # Roda o jogo
@@ -590,8 +590,8 @@ e o tempo para cair a próxima peça.
 '''
 def calculateLevelAndFallFreq(clearLines):
     
-    #level = int(clearLines/10);
-    level = 99
+    level = int(clearLines/10);
+    #level = 99
 
     if (level >= 0 and level <= 8):
         fallFreq = (48 - 5*level)/FPS
