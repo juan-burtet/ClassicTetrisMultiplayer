@@ -13,7 +13,7 @@ tcp.connect(dest)
 Player = {
 	  'name'	: '',
 	  'score'	: 0,
-	  'leve'	: 0,
+	  'level'	: 0,
 	  'lines'	: 0,
 	  'fallingPiece': None,
 	  'nextPiece'	: None,

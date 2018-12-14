@@ -10,7 +10,7 @@ PORT = 5000                     # Porta que o Servidor esta
 Player1 = {
 	  'name'	: '',
 	  'score'	: 0,
-	  'leve'	: 0,
+	  'level'	: 0,
 	  'lines'	: 0,
 	  'fallingPiece': None,
 	  'nextPiece'	: None,
@@ -22,7 +22,7 @@ Player1 = {
 Player2 = {
 	  'name'	: '',
 	  'score'	: 0,
-	  'leve'	: 0,
+	  'level'	: 0,
 	  'lines'	: 0,
 	  'fallingPiece': None,
 	  'nextPiece'	: None,
