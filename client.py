@@ -6,19 +6,27 @@ PORT = 5000            # Porta que o Servidor esta
 tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 dest = (HOST, PORT)
 tcp.connect(dest)
-print ('Para sair use CTRL+X\n')
-msg = 'Hello!'
 
-while msg != 'ok':
+Player = {
+	  'name'	: '',
+	  'score'	: 0,
+	  'leve'	: 0,
+	  'lines'	: 0,
+	  'fallingPiece': None,
+	  'nextPiece'	: None,
+	  'board'	: [],
+	  'wins'	: 0,
+	  'state'	: False
+}
+
+while Player['score'] < 10:
+    msg = str(Player)
+    print("Enviando dados: ", msg)
     msg = msg.encode()
-    tcp.send (msg)
-    print ('enviando: ', msg) 
-    msg = 'ok'
-
-r = ''
-while r == "ack recebido":
+    tcp.send(msg)
     r = tcp.recv(1024)
     r = r.decode()
-    print('r: ', r)
-    
+    print ("Recebendo dados adversário: ", r)
+    Player['score'] += 1
+
 tcp.close()
