@@ -576,7 +576,7 @@ def runGame():
                 # Atualiza o x da peça pra direita
                 fallingPiece['x'] += 1
                 # Adiciona o som de Movimento
-                sounds.playRotate()
+                sounds.playMove()
 
             # Atualiza o tempo da ultima movimentação pros lados
             lastMoveSidewaysTime = time.time()
