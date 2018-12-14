@@ -3,7 +3,7 @@
 import socket
 import _thread as thread
 
-HOST = '127.0.0.1'              # Endereco IP do Servidor
+HOST = '10.0.54.77'              # Endereco IP do Servidor
 PORT = 5000                     # Porta que o Servidor esta
 
 # Dict com status

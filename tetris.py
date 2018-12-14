@@ -14,7 +14,7 @@ from pygame.locals import *
 # Informações para o Multiplayer
 ################################
 # Endereço IP do Servidor
-HOST = '127.0.0.1'     
+HOST = '10.0.54.77'     
 # Porta do Sevidor
 PORT = 5000
 # Alguma coisa            
