@@ -40,6 +40,7 @@ def conectado(con, cliente):
     while True:
         # Recebe a mensagem
         clientMsg = con.recv(1024)
+        if not clientMsg: break
         # Decodifica de byte para string
         clientMsg = clientMsg.decode()
         # Converte para dict
@@ -53,7 +54,7 @@ def conectado(con, cliente):
         
         # -----------------CASO DE INICIO DE PARTIDA-----------------
         # Se o nome do player 1 ainda não foi setado, atualiza
-        if (Player1['name'] == '':
+        if (Player1['name'] == ''):
             Player1 = clientDict
             print("Atualizando dados do Player1: ", clientMsg)
             # Responde com a string do player2
@@ -75,10 +76,9 @@ def conectado(con, cliente):
             Player2 = clientDict
             print("Atualizando dados do Player2: ", clientMsg)
             # Responde com a string do player1
-            con.send(player1Str
-        if not msg: break
+            con.send(player1Str)
 
-    print ('Finalizando conexao do cliente', cliente)
+    print('Finalizando conexao do cliente', cliente)
     con.close()
     thread.exit()
 
