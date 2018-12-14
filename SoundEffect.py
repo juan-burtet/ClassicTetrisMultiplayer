@@ -18,6 +18,12 @@ def playMusic():
     pygame.mixer.music.load('Sounds/music.ogg')
     pygame.mixer.music.play(-1)
 
+def pauseMusic():
+    pygame.mixer.music.pause()
+
+def unpauseMusic():
+    pygame.mixer.music.unpause()
+
 def stopMusic():
     pygame.mixer.music.stop()
 

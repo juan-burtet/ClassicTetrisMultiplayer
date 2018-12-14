@@ -189,7 +189,7 @@ Função main.
 '''
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT, SCOREFONT, POINTSFONT
-    global LINESFONT, NAME, WINNERFONT, enemy, sounds
+    global LINESFONT, NAME, WINS, STATE, WINNERFONT, enemy, sounds
     
     # Inicializa o pygame
     pygame.init()
@@ -197,6 +197,7 @@ def main():
     FPSCLOCK = pygame.time.Clock()
     # Seta o tamanho da tela
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
+    
     # Fonte para letras pequenas
     BASICFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 18)
     # Fonte para letras grandes
@@ -209,8 +210,13 @@ def main():
     LINESFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 26)
     # Fonte para a tela de vitoria
     WINNERFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 50)
+    
     # Nome do Player 1
     NAME = 'JUAN'
+    # Quantidade de vitórias do Jogador
+    WINS = 0
+    # Personagem está vivo
+    STATE = False
 
     # Instância a classe Inimigo
     enemy = Enemy.Enemy()
@@ -401,6 +407,24 @@ def terminate():
     sys.exit()
 
 '''
+Função que cria uma Dict com os Status do Player
+'''
+def sendStatus(score, lines, fallingPiece, nextPiece, board):
+    # Dict com o Status do Jogador principal
+    status = {'name'        : NAME,
+              'score'       : score,
+              'level'       : level,
+              'lines'       : lines,
+              'fallingPiece': fallingPiece,
+              'nextPiece'   : nextPiece,
+              'board'       : board,
+              'wins'        : WINS,
+              'state'       : STATE}
+
+    # Retorna o dict com os Status
+    return status
+
+'''
 Função utilizada para rodar o jogo.
 '''
 def runGame():
@@ -424,14 +448,17 @@ def runGame():
     # Quantidade de linhas cortadas
     clearLines = 0
 
+    # Número usado para utilizar no Random
+    numberPiece = 0
+
     # Calcula o nivel e a frequência de queda
     level, fallFreq = calculateLevelAndFallFreq(clearLines)
 
     # Inicializa a peça que vai cair
-    fallingPiece = getNewPiece()
+    fallingPiece, numberPiece = getNewPiece()
 
     # Inicializa a peça que vai ser a seguinte
-    nextPiece = getNewPiece()
+    nextPiece, numberPiece = getNewPiece(n=numberPiece)
 
     # Reseta o status do inimigo
     enemy.reset()
@@ -448,7 +475,7 @@ def runGame():
             # Peça caindo é a peça seguinte
             fallingPiece = nextPiece
             # Gera uma nova peça seguinte
-            nextPiece = getNewPiece()
+            nextPiece, numberPiece = getNewPiece(n=numberPiece)
 
             # Reseta o tempo da ultima caida
             lastFallTime = time.time() 
@@ -471,8 +498,11 @@ def runGame():
 
                     # Pinta a tecla com a cor do fundo
                     DISPLAYSURF.fill(BGCOLOR)
+
+                    sounds.pauseMusic()
                     # Mostra a tela de pausa até apertar alguma peça
-                    showTextScreen('PAUSED') 
+                    showTextScreen('PAUSED')
+                    sounds.unpauseMusic()
                     
                     # Atualiza o tempo das peças
                     lastFallTime = time.time()
@@ -714,12 +744,20 @@ def calculateLevelAndFallFreq(clearLines):
 '''
 Função que retorna uma nova peça
 '''
-def getNewPiece():
+def getNewPiece(n=7):
 
     # Atualiza para uma nova seed
-    random.seed()
-    # Retorna uma das formas das peças
-    shape = random.choice(list(PIECES.keys()))
+    #random.seed()
+
+    # Random parecido com o NES
+    random_number = random.randint(0,7)
+    if random_number == n or random_number == 7:
+        random_number = random.randint(0,6)
+
+    # Pega a peça random
+    shape_list = list(PIECES.keys())
+    print(random_number)
+    shape = shape_list[random_number]
 
     # Nova peça é um dict:
     newPiece = {'shape': shape, # Com formato
@@ -729,7 +767,7 @@ def getNewPiece():
                 'color': getColor(shape)} # Cor aleatória
 
     # Retorna a nova peça
-    return newPiece
+    return newPiece, random_number
 
 '''
 Função que retorna a cor da peça
@@ -974,8 +1012,18 @@ Função que desenha a próxima peça
 '''
 def drawNextPiece(piece):
     
+    # Posições padrões
+    x, y = 280, 85
+
+    # Caso as peças sejam O ou I, ajeitar!
+    if piece['shape'] == 'O':
+        x += 7
+    elif piece['shape'] == 'I':
+        x += 5
+        y += 7
+
     # Pinta a próxima peça
-    drawPiece(piece, pixelx=280, pixely=85, nextPiece=True)
+    drawPiece(piece, pixelx=x, pixely=y, nextPiece=True)
 
 '''
 Função que desenha uma peça na Tela
@@ -1114,8 +1162,18 @@ Função que desenha a próxima peça do inimigo
 '''
 def drawNextPieceEnemy(piece, nextPiece=False):
 
+    # Posições padrões
+    x, y = WINDOWWIDTH -260, 85
+
+    # Caso as peças sejam O ou I, ajeitar!
+    if piece['shape'] == 'O':
+        x += 7
+    elif piece['shape'] == 'I':
+        x += 5
+        y += 7
+
     # Pinta a próxima peça
-    drawPiece(piece, pixelx=WINDOWWIDTH - 260, pixely=85, nextPiece=True)
+    drawPiece(piece, pixelx=x, pixely=y, nextPiece=True)
 
 '''
 Função que desenha a próxima peça do inimigo
