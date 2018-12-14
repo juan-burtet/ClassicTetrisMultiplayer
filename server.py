@@ -31,10 +31,14 @@ Player2 = {
 	  'state'	: False
 }
 
+mutex = thread.allocate_lock()
 
 # Retorna um dict com os status
 
 def conectado(con, cliente):
+    global Player1
+    global Player2
+    
     print ('Conectado por', cliente)
 
     while True:
@@ -47,13 +51,16 @@ def conectado(con, cliente):
         clientDict = eval(clientMsg)
 
         # Pega os dados atuais dos players como string e codifica em byte
+        #mutex.acquire()
         player1Str = str(Player1)
-        player1Str = player1Str.encode()
         player2Str = str(Player2)
-        player2Str = player2Str.encode()
+        mutex.release()
+        player1Str = player1Str.encode()
+        #player2Str = player2Str.encode()
         
         # -----------------CASO DE INICIO DE PARTIDA-----------------
         # Se o nome do player 1 ainda não foi setado, atualiza
+       # mutex.acquire()
         if (Player1['name'] == ''):
             Player1 = clientDict
             print("Atualizando dados do Player1: ", clientMsg)
@@ -77,7 +84,8 @@ def conectado(con, cliente):
             print("Atualizando dados do Player2: ", clientMsg)
             # Responde com a string do player1
             con.send(player1Str)
-
+       # mutex.release()
+    
     print('Finalizando conexao do cliente', cliente)
     con.close()
     thread.exit()
