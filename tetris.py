@@ -189,7 +189,7 @@ Função main.
 '''
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT, SCOREFONT, POINTSFONT
-    global LINESFONT, NAME, WINNERFONT, enemy, sounds
+    global LINESFONT, NAME, WINS, STATE, WINNERFONT, enemy, sounds
     
     # Inicializa o pygame
     pygame.init()
@@ -197,6 +197,7 @@ def main():
     FPSCLOCK = pygame.time.Clock()
     # Seta o tamanho da tela
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
+    
     # Fonte para letras pequenas
     BASICFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 18)
     # Fonte para letras grandes
@@ -209,8 +210,13 @@ def main():
     LINESFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 26)
     # Fonte para a tela de vitoria
     WINNERFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 50)
+    
     # Nome do Player 1
     NAME = 'JUAN'
+    # Quantidade de vitórias do Jogador
+    WINS = 0
+    # Personagem está vivo
+    STATE = False
 
     # Instância a classe Inimigo
     enemy = Enemy.Enemy()
@@ -399,6 +405,24 @@ def terminate():
     pygame.quit()
     # Termina o programa
     sys.exit()
+
+'''
+Função que cria uma Dict com os Status do Player
+'''
+def sendStatus(score, lines, fallingPiece, nextPiece, board):
+    # Dict com o Status do Jogador principal
+    status = {'name'        : NAME,
+              'score'       : score,
+              'level'       : level,
+              'lines'       : lines,
+              'fallingPiece': fallingPiece,
+              'nextPiece'   : nextPiece,
+              'board'       : board,
+              'wins'        : WINS,
+              'state'       : STATE}
+
+    # Retorna o dict com os Status
+    return status
 
 '''
 Função utilizada para rodar o jogo.
