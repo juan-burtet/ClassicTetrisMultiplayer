@@ -6,7 +6,7 @@
 # http://inventwithpython.com/pygame
 # Released under a "Simplified BSD" license
 
-import random, time, pygame, sys, socket, Enemy 
+import random, time, pygame, sys, socket, Enemy, Player
 import SoundEffect as sounds
 from pygame.locals import *
 
@@ -231,14 +231,18 @@ def main(player):
     # Fonte para a tela de vitoria
     WINNERFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 50)
     
-    # Nome do Player 1
+    # Nome do player 1
     NAME = player
+
+    # Nome do Player 1
+    Player.status['name'] = player
     # Quantidade de vitórias do Jogador
-    WINS = 0
+    Player.status['wins'] = 0
     # Personagem está vivo
-    STATE = False
+    Player.status['state'] = False
     # Inicializa com o level 0
     level = 0
+    Player.status['level'] = level
 
     # Instância a classe Inimigo
     enemy = Enemy.Enemy()
@@ -249,11 +253,8 @@ def main(player):
     # Inicializa com a tela inicial
     showStartScreen()
 
-    # Dict com o Status a ser enviado ao server
-    status = sendStatus()
-
     # Transforma em String o Status
-    message = str(status)
+    message = str(Player.status)
 
     # Imprime os dados enviados
     print("Enviando Dados:", message, '\n\n')
@@ -288,11 +289,37 @@ def main(player):
 
 
     # Loop do jogo
-    while WINS != 3 or enemy.getWins() != 3:
+    while Player.status['wins'] != 3 and enemy.getWins() != 3:
         # Roda o jogo
         winner = runGame()
         # Dá o nome do vencedor
         showWinnerScreen(winner)
+
+         # Transforma em String o Status
+        message = str(Player.status)
+
+        # Imprime os dados enviados
+        print("Enviando Dados:", message, '\n\n')
+
+        # Codifica a mensagem a ser enviada
+        message = message.encode()
+
+        # Envia a mensagem
+        tcp.send(message)
+
+        # Recebe a mensagem do servidor
+        receive = tcp.recv(2048)
+
+        # Decodifica a mensagem
+        receive = receive.decode()
+
+        # Atualiza os dados do inimigo
+        enemy.update(eval(receive))
+
+        # Imprime os dados recebidos
+        print("Recebendo dados do adversário:", eval(receive), '\n\n')
+
+
 
 '''
 Função que desenha a tela de inicio
@@ -465,31 +492,13 @@ def terminate():
     sys.exit()
 
 '''
-Função que cria uma Dict com os Status do Player
-'''
-def sendStatus(score=0, lines=0, fallingPiece=None, nextPiece=None, board=[]):
-    
-    # Dict com o Status do Jogador principal
-    status = {'name'        : NAME,
-              'score'       : score,
-              'level'       : level,
-              'lines'       : lines,
-              'fallingPiece': fallingPiece,
-              'nextPiece'   : nextPiece,
-              'board'       : board,
-              'wins'        : WINS,
-              'state'       : STATE}
-
-    # Retorna o dict com os Status
-    return status
-
-'''
 Função utilizada para rodar o jogo.
 '''
 def runGame():
     global level
     # Inicializa o jogo
     board = getBlankBoard()
+    Player.status['board'] = board
 
     # Inicializa os tempos de movimentação
     lastMoveDownTime = time.time()
@@ -503,25 +512,32 @@ def runGame():
 
     # Inicializa a pontuação
     score = 0
+    Player.status['score'] = score
 
     # Diferênça de pontos
     diff = 0
 
     # Quantidade de linhas cortadas
     clearLines = 0
+    Player.status['lines'] = clearLines
 
     # Número usado para utilizar no Random
     numberPiece = 0
 
     # Calcula o nivel e a frequência de queda
     level, fallFreq = calculateLevelAndFallFreq(clearLines)
+    Player.status['level'] = level
 
     # Inicializa a peça que vai cair
     fallingPiece, numberPiece = getNewPiece()
+    Player.status['fallingPiece'] = fallingPiece
 
     # Inicializa a peça que vai ser a seguinte
     nextPiece, numberPiece = getNewPiece(n=numberPiece)
+    Player.status['nextPiece'] = nextPiece
 
+    # Personagem nasce vivo (?)
+    Player.status['state'] = False
 
     # Toca música do jogo
     sounds.playMusic()
@@ -529,15 +545,8 @@ def runGame():
     # Loop da partida
     while True:
 
-        # Dict com o Status a ser enviado ao server
-        status = sendStatus(score=score, 
-                            lines=clearLines, 
-                            fallingPiece=fallingPiece, 
-                            nextPiece=nextPiece, 
-                            board=board)
-
         # Transforma em String o Status
-        message = str(status)
+        message = str(Player.status)
 
         # Imprime os dados enviados
         #print("Enviando Dados:", message, '\n\n')
@@ -565,15 +574,21 @@ def runGame():
             
             # Peça caindo é a peça seguinte
             fallingPiece = nextPiece
+            Player.status['fallingPiece'] = fallingPiece
+
             # Gera uma nova peça seguinte
             nextPiece, numberPiece = getNewPiece(n=numberPiece)
+            Player.status['nextPiece'] = nextPiece
 
             # Reseta o tempo da ultima caida
             lastFallTime = time.time() 
 
             # Se a peça não está em uma posição valida, você morreu
             if not isValidPosition(board, fallingPiece):
-                STATE = True
+                Player.status['state'] = True
+                Player.status['fallingPiece'] = None
+                Player.status['nextPiece'] = None
+                Player.status['board'] = getBlankBoard()
                 break
 
         # Verifica se teve algum evento de saida do jogo
@@ -607,6 +622,8 @@ def runGame():
                     
                     # Atualiza o X uma posição a esquerda
                     fallingPiece['x'] -= 1
+                    Player.status['fallingPiece'] = fallingPiece
+
                     # Está indo pra esquerda
                     movingLeft = True
                     # Não está indo pra direita
@@ -623,6 +640,8 @@ def runGame():
                     
                     # Atualiza o X uma posição a direita
                     fallingPiece['x'] += 1
+                    Player.status['fallingPiece'] = fallingPiece
+
                     # Está indo pra direita
                     movingRight = True
                     # Não está indo pra esquerda
@@ -641,6 +660,8 @@ def runGame():
                     # Aplica o som de Rotação
                     else:
                         sounds.playRotate()
+
+                    Player.status['fallingPiece'] = fallingPiece
                 
                 # Se a tecla Q foi apertada, rotaciona a peça pra esquerda
                 elif (event.key == K_q):
@@ -654,6 +675,8 @@ def runGame():
                     else:
                         sounds.playRotate()
 
+                    Player.status['fallingPiece'] = fallingPiece
+
                 # Se a tecla DOWN ou S foi apertada, desce a peça
                 elif (event.key == K_DOWN or event.key == K_s):
                     # Peça esta indo pra baixo
@@ -661,6 +684,7 @@ def runGame():
                     # Confere se a posição é válida
                     if isValidPosition(board, fallingPiece, adjY=1):
                         fallingPiece['y'] += 1
+                        Player.status['fallingPiece'] = fallingPiece
 
                     # Atualiza o tempo de se movimentar pra baixo
                     lastMoveDownTime = time.time()
@@ -674,6 +698,8 @@ def runGame():
             if movingLeft and isValidPosition(board, fallingPiece, adjX=-1):
                 # Atualiza o x da peça pra esquerda
                 fallingPiece['x'] -= 1
+                Player.status['fallingPiece'] = fallingPiece
+
                 # Adiciona o som de Movimento
                 sounds.playMove()
 
@@ -681,6 +707,8 @@ def runGame():
             elif movingRight and isValidPosition(board, fallingPiece, adjX=1):
                 # Atualiza o x da peça pra direita
                 fallingPiece['x'] += 1
+                Player.status['fallingPiece'] = fallingPiece
+
                 # Adiciona o som de Movimento
                 sounds.playMove()
 
@@ -694,6 +722,7 @@ def runGame():
         if movingDown and time.time() - lastMoveDownTime > MOVEDOWNFREQ and isValidPosition(board, fallingPiece, adjY=1):
             # Atualiza o valor de y pra baixo
             fallingPiece['y'] += 1
+            Player.status['fallingPiece'] = fallingPiece
 
             # Atualiza o tempo da ultima movimentação pra baixo
             lastMoveDownTime = time.time()
@@ -742,6 +771,13 @@ def runGame():
                 # Atualiza o ultimo tempo de queda
                 lastFallTime = time.time()
 
+            # Atualiza o Status
+            Player.status['board'] = board
+            Player.status['fallingPiece'] = fallingPiece
+            Player.status['score'] = score
+            Player.status['lines'] = clearLines
+            Player.status['level'] = level
+
 
         # Limita o score máximo
         if score > 999999:
@@ -768,10 +804,8 @@ def runGame():
             # Desenha a peça caindo
             drawPiece(fallingPiece)
         
-        # Se o inimigo morreu, não pinta
-        if not enemy.getState():
-            # Desenha o display do inimigo
-            drawDisplayEnemy(enemy.getStatus())
+        # Desenha o display do inimigo
+        drawDisplayEnemy(enemy.getStatus())
        
         # Atualiza o displa
         pygame.display.update()
@@ -779,23 +813,13 @@ def runGame():
         # Se o inimigo perdeu e a diferênça é positiva,
         # VOCÊ GANHOU
         if enemy.getState() and diff > 0:
-            print('ganhou')
-            WINS += 1
-            return NAME
+            break
 
         # Espera o tempo do próximo Frame
         FPSCLOCK.tick(FPS)
 
-
-    # Dict com o Status a ser enviado ao server
-    status = sendStatus(score=score, 
-                        lines=clearLines, 
-                        fallingPiece=fallingPiece, 
-                        nextPiece=nextPiece, 
-                        board=board)
-
     # Transforma em String o Status
-    message = str(status)
+    message = str(Player.status)
 
     # Imprime os dados enviados
     #print("Enviando Dados:", message, '\n\n')
@@ -815,22 +839,12 @@ def runGame():
     # Atualiza os dados do inimigo
     enemy.update(eval(receive))
 
-    print('veio aqui')
     # Você morreu, mas espera até o inimigo
     # morrer ou passar sua pontuação
-    while not enemy.getState() or diff <= 0:
-        print(STATE)
-        print(enemy.getState())
-        print(diff)
-        # Dict com o Status a ser enviado ao server
-        status = sendStatus(score=score, 
-                            lines=clearLines, 
-                            fallingPiece=fallingPiece, 
-                            nextPiece=nextPiece, 
-                            board=board)
+    while not enemy.getState() and diff >= 0:
 
         # Transforma em String o Status
-        message = str(status)
+        message = str(Player.status)
 
         # Imprime os dados enviados
         #print("Enviando Dados:", message, '\n\n')
@@ -854,7 +868,7 @@ def runGame():
         #print("Recebendo dados do adversário:", eval(receive), '\n\n')
 
         # Diferença entre os pontos
-        diff = score - enemy.getScore()
+        diff = Player.status['score'] - enemy.getScore()
         enemy.setDiff(-diff)
 
         # Pinta o fundo de preto
@@ -868,8 +882,8 @@ def runGame():
 
     # Confere quem ganhou
     if diff > 0:
-        WINS += 1
-        return NAME
+        Player.status['wins'] += 1
+        return Player.status['name']
     else:
         return enemy.getName()
 
@@ -1170,7 +1184,7 @@ def drawStatus(score, level, lines, diff):
     DISPLAYSURF.blit(levelSurf, levelRect)
 
     # Pinta os Rounds
-    DISPLAYSURF.blit(ROUNDS[0], (235, 632))    
+    DISPLAYSURF.blit(ROUNDS[Player.status['wins']], (235, 632))    
 
     # Pinta o nome
     levelSurf = LINESFONT.render('%s' %NAME, False, TEXTCOLOR)
@@ -1324,7 +1338,7 @@ def drawStatusEnemy(score, enemy_level, lines, name):
     DISPLAYSURF.blit(levelSurf, levelRect)
 
     # Pinta os Rounds
-    DISPLAYSURF.blit(ROUNDS[0], (WINDOWWIDTH - 300, 632))    
+    DISPLAYSURF.blit(ROUNDS[enemy.getWins()], (WINDOWWIDTH - 300, 632))    
 
     # Pinta o nome
     levelSurf = LINESFONT.render('%s' %name, False, TEXTCOLOR)
