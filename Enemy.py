@@ -28,6 +28,14 @@ class Enemy:
 		self.wins = 0
 		# Estado para saber se o inimigo está morto
 		self.state = False
+		# Diferênça de Pontuação
+		self.diff = 0
+
+	def setDiff(self, diff):
+		self.diff = diff
+
+	def getDiff(self):
+		return self.diff
 
 	'''
 	Método que retorna um dict com os status
@@ -67,12 +75,16 @@ class Enemy:
 	'''
 	Método para atualizar o status do inimigo
 	'''
-	def update(self, score, level, lines, fallingPiece, nextPiece, board):
-		self.score = score
-		self.level = level
-		self.fallingPiece = fallingPiece
-		self.nextPiece = nextPiece
-		self.board = board
+	def update(self, status):
+		self.name = status['name']
+		self.score = status['score']
+		self.level = status['level']
+		self.lines = status['lines']
+		self.fallingPiece = status['fallingPiece']
+		self.nextPiece = status['nextPiece']
+		self.board = status['board']
+		self.wins = status['wins']
+		self.state = status['state']
 		
 	'''
 	Método que retorna o

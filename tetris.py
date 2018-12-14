@@ -6,24 +6,42 @@
 # http://inventwithpython.com/pygame
 # Released under a "Simplified BSD" license
 
-import random, time, pygame, sys, Enemy 
+import random, time, pygame, sys, socket, Enemy 
 import SoundEffect as sounds
 from pygame.locals import *
 
-FPS = 60.0988 
-WINDOWWIDTH = 800
-WINDOWHEIGHT = 680
-BOXSIZE = 20
-BOARDWIDTH = 10
-BOARDHEIGHT = 20
-BLANK = '.'
 
-MOVESIDEWAYSFREQ = 0.1
+# Informações para o Multiplayer
+################################
+# Endereço IP do Servidor
+HOST = '127.0.0.1'     
+# Porta do Sevidor
+PORT = 5000
+# Alguma coisa            
+tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# dest = Tupla de Endereço IP e Porta
+dest = (HOST, PORT)
+# Faz conexão TCP 
+tcp.connect(dest)
+
+# Informações necessárias do Jogo
+FPS = 60.0988 # FPS
+WINDOWWIDTH = 800 # LARGURA DA TELA
+WINDOWHEIGHT = 680 # ALTURA DA TELA
+BOXSIZE = 20 # TAMANHO DE UM PEDAÇO DA PEÇA
+BOARDWIDTH = 10 # LARGURA DO CAMPO
+BOARDHEIGHT = 20 # ALTURA DO CAMPO
+BLANK = '.' # ÁREA VAZIA NO CAMPO
+
+# Timing de movimento das peças
+MOVESIDEWAYSFREQ = 0.1 
 MOVEDOWNFREQ = 0.1
 
+# Margins do Campo
 XMARGIN = 171
 TOPMARGIN = 189
 
+# Cores usadas no Programa
 #               R    G    B
 WHITE       = (255, 255, 255)
 BLACK       = (  0,   0,   0)
@@ -35,10 +53,12 @@ RED_LOGO    = (181,  49,  32)
 BLUE_LOGO   = (100, 176, 255)
 YELLOW_LOGO = (228, 229, 148)
 
+# Atualizando com nomes
 BGCOLOR = BLACK
 TEXTCOLOR = WHITE
 TEXTSHADOWCOLOR = BLACK
 
+# Tamanho do Template de Peças
 TEMPLATEWIDTH = 5
 TEMPLATEHEIGHT = 5
 
@@ -187,9 +207,9 @@ ROUNDS = [pygame.image.load('Sprites/Rounds/0.png'),
 '''
 Função main.
 '''
-def main():
+def main(player):
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT, SCOREFONT, POINTSFONT
-    global LINESFONT, NAME, WINS, STATE, WINNERFONT, enemy, sounds
+    global LINESFONT, NAME, WINS, STATE, WINNERFONT, enemy, sounds, level
     
     # Inicializa o pygame
     pygame.init()
@@ -212,29 +232,67 @@ def main():
     WINNERFONT = pygame.font.Font('Fonts/Pixel_NES.otf', 50)
     
     # Nome do Player 1
-    NAME = 'JUAN'
+    NAME = player
     # Quantidade de vitórias do Jogador
     WINS = 0
     # Personagem está vivo
     STATE = False
+    # Inicializa com o level 0
+    level = 0
 
     # Instância a classe Inimigo
     enemy = Enemy.Enemy()
-    # Adiciona o nome do Inimigo
-    enemy.setName('FELIPE')
 
     # Seta o nome da Janela
     pygame.display.set_caption('Classic Tetris Multiplayer')
 
     # Inicializa com a tela inicial
     showStartScreen()
-    
+
+    # Dict com o Status a ser enviado ao server
+    status = sendStatus()
+
+    # Transforma em String o Status
+    message = str(status)
+
+    # Imprime os dados enviados
+    print("Enviando Dados:", message, '\n\n')
+
+    # Codifica a mensagem a ser enviada
+    message = message.encode()
+
+    # Enquanto o nome for Vazio, espera o jogador entrar
+    while enemy.getName() == '':
+        
+        # Envia a mensagem
+        tcp.send(message)
+
+        # Recebe a mensagem do servidor
+        receive = tcp.recv(2048)
+
+        # Decodifica a mensagem
+        receive = receive.decode()
+
+        # Atualiza os dados do inimigo
+        enemy.update(eval(receive))
+
+        # Imprime os dados recebidos
+        print("Recebendo dados do adversário:", eval(receive), '\n\n')
+
+        # Pinta o fundo de preto
+        DISPLAYSURF.fill(BGCOLOR)
+        pygame.display.update()
+        FPSCLOCK.tick()
+
+    random.seed()
+
+
     # Loop do jogo
-    while True:
+    while WINS != 3 or enemy.getWins() != 3:
         # Roda o jogo
-        runGame()
+        winner = runGame()
         # Dá o nome do vencedor
-        showWinnerScreen('FELIPE')
+        showWinnerScreen(winner)
 
 '''
 Função que desenha a tela de inicio
@@ -409,7 +467,7 @@ def terminate():
 '''
 Função que cria uma Dict com os Status do Player
 '''
-def sendStatus(score, lines, fallingPiece, nextPiece, board):
+def sendStatus(score=0, lines=0, fallingPiece=None, nextPiece=None, board=[]):
     # Dict com o Status do Jogador principal
     status = {'name'        : NAME,
               'score'       : score,
@@ -445,6 +503,9 @@ def runGame():
     # Inicializa a pontuação
     score = 0
 
+    # Diferênça de pontos
+    diff = 0
+
     # Quantidade de linhas cortadas
     clearLines = 0
 
@@ -460,14 +521,43 @@ def runGame():
     # Inicializa a peça que vai ser a seguinte
     nextPiece, numberPiece = getNewPiece(n=numberPiece)
 
-    # Reseta o status do inimigo
-    enemy.reset()
 
     # Toca música do jogo
     sounds.playMusic()
     
     # Loop da partida
     while True:
+
+        # Dict com o Status a ser enviado ao server
+        status = sendStatus(score=score, 
+                            lines=clearLines, 
+                            fallingPiece=fallingPiece, 
+                            nextPiece=nextPiece, 
+                            board=board)
+
+        # Transforma em String o Status
+        message = str(status)
+
+        # Imprime os dados enviados
+        #print("Enviando Dados:", message, '\n\n')
+
+        # Codifica a mensagem a ser enviada
+        message = message.encode()
+        
+        # Envia a mensagem
+        tcp.send(message)
+
+        # Recebe a mensagem do servidor
+        receive = tcp.recv(2048)
+
+        # Decodifica a mensagem
+        receive = receive.decode()
+
+        # Atualiza os dados do inimigo
+        enemy.update(eval(receive))
+
+        # Imprime os dados recebidos
+        #print("Recebendo dados do adversário:", eval(receive), '\n\n')
 
         # Confere se nenhuma peça está caindo
         if fallingPiece == None:
@@ -480,9 +570,11 @@ def runGame():
             # Reseta o tempo da ultima caida
             lastFallTime = time.time() 
 
-            # Se a peça não está em uma posição valida, você perdeu
+            # Se a peça não está em uma posição valida, você morreu
             if not isValidPosition(board, fallingPiece):
-                return
+                STATE = True
+                print('morreu')
+                break
 
         # Verifica se teve algum evento de saida do jogo
         checkForQuit()
@@ -671,6 +763,10 @@ def runGame():
         if score > 999999:
             score = 999999
 
+        # Diferença entre os pontos
+        diff = score - enemy.getScore()
+        enemy.setDiff(-diff)
+
         # Pinta o fundo de preto
         DISPLAYSURF.fill(BGCOLOR)
         # Pinta o background
@@ -679,7 +775,7 @@ def runGame():
         # Desenha o campo
         drawBoard(board)
         # Desenha a pontuação e o nivel
-        drawStatus(score, level, clearLines)
+        drawStatus(score, level, clearLines, diff)
         # Desenha a próxima peça
         drawNextPiece(nextPiece)
 
@@ -687,9 +783,6 @@ def runGame():
         if fallingPiece != None:
             # Desenha a peça caindo
             drawPiece(fallingPiece)
-
-        # Atualiza o inimigo
-        enemy.update(score, level, clearLines, fallingPiece, nextPiece, board)
         
         # Desenha o display do inimigo
         drawDisplayEnemy(enemy.getStatus())
@@ -697,8 +790,102 @@ def runGame():
         # Atualiza o displa
         pygame.display.update()
 
+        # Se o inimigo perdeu e a diferênça é positiva,
+        # VOCÊ GANHOU
+        if enemy.getState() and diff > 0:
+            print('ganhou')
+            WINS += 1
+            return NAME
+
         # Espera o tempo do próximo Frame
         FPSCLOCK.tick(FPS)
+
+
+    # Dict com o Status a ser enviado ao server
+    status = sendStatus(score=score, 
+                        lines=clearLines, 
+                        fallingPiece=fallingPiece, 
+                        nextPiece=nextPiece, 
+                        board=board)
+
+    # Transforma em String o Status
+    message = str(status)
+
+    # Imprime os dados enviados
+    #print("Enviando Dados:", message, '\n\n')
+
+    # Codifica a mensagem a ser enviada
+    message = message.encode()
+        
+    # Envia a mensagem
+    tcp.send(message)
+
+    # Recebe a mensagem do servidor
+    receive = tcp.recv(2048)
+
+    # Decodifica a mensagem
+    receive = receive.decode()
+
+    # Atualiza os dados do inimigo
+    enemy.update(eval(receive))
+
+    print('veio aqui')
+    # Você morreu, mas espera até o inimigo
+    # morrer ou passar sua pontuação
+    while not enemy.getState() or diff <= 0:
+        print(STATE)
+        print(enemy.getState())
+        print(diff)
+        # Dict com o Status a ser enviado ao server
+        status = sendStatus(score=score, 
+                            lines=clearLines, 
+                            fallingPiece=fallingPiece, 
+                            nextPiece=nextPiece, 
+                            board=board)
+
+        # Transforma em String o Status
+        message = str(status)
+
+        # Imprime os dados enviados
+        #print("Enviando Dados:", message, '\n\n')
+
+        # Codifica a mensagem a ser enviada
+        message = message.encode()
+        
+        # Envia a mensagem
+        tcp.send(message)
+
+        # Recebe a mensagem do servidor
+        receive = tcp.recv(2048)
+
+        # Decodifica a mensagem
+        receive = receive.decode()
+
+        # Atualiza os dados do inimigo
+        enemy.update(eval(receive))
+
+        # Imprime os dados recebidos
+        #print("Recebendo dados do adversário:", eval(receive), '\n\n')
+
+        # Diferença entre os pontos
+        diff = score - enemy.getScore()
+        enemy.setDiff(-diff)
+
+        # Pinta o fundo de preto
+        DISPLAYSURF.fill(BGCOLOR)
+        # Pinta o background
+        DISPLAYSURF.blit(BACKGROUND, (0, 0))
+        # Desenha o display do inimigo
+        drawDisplayEnemy(enemy.getStatus())
+        # Atualiza o displa
+        pygame.display.update()
+
+    # Confere quem ganhou
+    if diff > 0:
+        WINS += 1
+        return NAME
+    else:
+        return enemy.getName()
 
 '''
 Função que retorna o campo do jogo.
@@ -721,8 +908,8 @@ e o tempo para cair a próxima peça.
 '''
 def calculateLevelAndFallFreq(clearLines):
     
-    level = int(clearLines/10);
-    #level = 99
+    #level = int(clearLines/10);
+    level = 8
 
     if (level >= 0 and level <= 8):
         fallFreq = (48 - 5*level)/FPS
@@ -756,7 +943,6 @@ def getNewPiece(n=7):
 
     # Pega a peça random
     shape_list = list(PIECES.keys())
-    print(random_number)
     shape = shape_list[random_number]
 
     # Nova peça é um dict:
@@ -945,13 +1131,12 @@ def convertToPixelCoords(boxx, boxy):
 Função que desenha o Status do jogo
 contendo a Pontuação e o Nível
 '''
-def drawStatus(score, level, lines):
+def drawStatus(score, level, lines, diff):
     
 
     pointSurf = ''
 
     # DIFERENÇA DE PONTUAÇAO
-    diff = 0
     if diff < 0:
         diff = '-' + format(abs(diff), '06d')
         pointSurf = POINTSFONT.render('%s' %diff, False, RED)
@@ -1083,6 +1268,9 @@ Função que desenha o campo do inimigo
 '''
 def drawBoardEnemy(board):
     
+    if board == []:
+        return    
+
     # Preenche o interior do campo com a cor do fundo
     pygame.draw.rect(DISPLAYSURF, BGCOLOR, (WINDOWWIDTH -XMARGIN - 200, TOPMARGIN, BOXSIZE * BOARDWIDTH, BOXSIZE * BOARDHEIGHT))
 
@@ -1100,8 +1288,9 @@ def drawStatusEnemy(score, enemy_level, lines, name):
 
     pointSurf = ''
 
+    diff = enemy.getDiff()
+
     # DIFERENÇA DE PONTUAÇAO
-    diff = 0
     if diff < 0:
         diff = '-' + format(abs(diff), '06d')
         pointSurf = POINTSFONT.render('%s' %diff, False, RED)
@@ -1161,6 +1350,9 @@ def drawStatusEnemy(score, enemy_level, lines, name):
 Função que desenha a próxima peça do inimigo
 '''
 def drawNextPieceEnemy(piece, nextPiece=False):
+    if piece == None:
+        return
+
 
     # Posições padrões
     x, y = WINDOWWIDTH -260, 85
@@ -1180,6 +1372,10 @@ Função que desenha a próxima peça do inimigo
 '''
 def drawPieceEnemy(piece, pixelx=None, pixely=None, nextPiece=False):
     
+    # Se não tem peça, retorna
+    if piece == None:
+        return
+
    # Qual peça precisa ser pintada
     shapeToDraw = PIECES[piece['shape']][piece['rotation']]
     

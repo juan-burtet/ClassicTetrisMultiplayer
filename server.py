@@ -43,7 +43,7 @@ def conectado(con, cliente):
 
     while True:
         # Recebe a mensagem
-        clientMsg = con.recv(1024)
+        clientMsg = con.recv(2048)
         if not clientMsg: break
         # Decodifica de byte para string
         clientMsg = clientMsg.decode()

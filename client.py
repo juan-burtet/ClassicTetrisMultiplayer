@@ -31,6 +31,7 @@ while Player['score'] < 10:
     tcp.send(msg)
     r = tcp.recv(1024)
     r = r.decode()
+    r = eval(r)
     print ("Recebendo dados adversário: ", r)
     Player['score'] += 1
     time.sleep(5)
