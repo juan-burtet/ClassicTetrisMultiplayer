@@ -573,7 +573,6 @@ def runGame():
             # Se a peça não está em uma posição valida, você morreu
             if not isValidPosition(board, fallingPiece):
                 STATE = True
-                print('morreu')
                 break
 
         # Verifica se teve algum evento de saida do jogo
@@ -585,24 +584,8 @@ def runGame():
             # Se uma tecla foi solta
             if event.type == KEYUP:
 
-                # Se a tecla P foi solta, pausa o jogo
-                if (event.key == K_p):
-
-                    # Pinta a tecla com a cor do fundo
-                    DISPLAYSURF.fill(BGCOLOR)
-
-                    sounds.pauseMusic()
-                    # Mostra a tela de pausa até apertar alguma peça
-                    showTextScreen('PAUSED')
-                    sounds.unpauseMusic()
-                    
-                    # Atualiza o tempo das peças
-                    lastFallTime = time.time()
-                    lastMoveDownTime = time.time()
-                    lastMoveSidewaysTime = time.time()
-
                 # Se a tecla LEFT ou A foi solta, para de andar pra esquerda
-                elif (event.key == K_LEFT or event.key == K_a):
+                if (event.key == K_LEFT or event.key == K_a):
                     movingLeft = False
                 # Se a tecla RIGHT ou D foi solta, para de andar pra direita
                 elif (event.key == K_RIGHT or event.key == K_d):
