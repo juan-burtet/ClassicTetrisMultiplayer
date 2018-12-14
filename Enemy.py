@@ -1,4 +1,5 @@
-from tetris import *
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 '''
 Classe inimigo que possui as informações do adversário
