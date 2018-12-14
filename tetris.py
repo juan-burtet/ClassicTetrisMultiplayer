@@ -6,7 +6,8 @@
 # http://inventwithpython.com/pygame
 # Released under a "Simplified BSD" license
 
-import random, time, pygame, sys, Enemy
+import random, time, pygame, sys, Enemy 
+import SoundEffect as sounds
 from pygame.locals import *
 
 FPS = 60.0988 
@@ -188,7 +189,7 @@ Função main.
 '''
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT, SCOREFONT, POINTSFONT
-    global LINESFONT, NAME, WINNERFONT, enemy
+    global LINESFONT, NAME, WINNERFONT, enemy, sounds
     
     # Inicializa o pygame
     pygame.init()
@@ -211,7 +212,9 @@ def main():
     # Nome do Player 1
     NAME = 'JUAN'
 
+    # Instância a classe Inimigo
     enemy = Enemy.Enemy()
+    # Adiciona o nome do Inimigo
     enemy.setName('FELIPE')
 
     # Seta o nome da Janela
@@ -336,8 +339,10 @@ def showWinnerScreen(text):
     t = time.time()
     x = t;
 
+    sounds.stopMusic()
+    sounds.playSuccess()
     # Espera até alguma tecla ser apertada
-    while x - t < 3:
+    while x - t <= 2.3:
         x = time.time()
         pygame.display.update()
         FPSCLOCK.tick()
@@ -428,7 +433,12 @@ def runGame():
     # Inicializa a peça que vai ser a seguinte
     nextPiece = getNewPiece()
 
+    # Reseta o status do inimigo
     enemy.reset()
+
+    # Toca música do jogo
+    sounds.playMusic()
+    
     # Loop da partida
     while True:
 
@@ -485,6 +495,10 @@ def runGame():
                 # Se a tecla LEFT ou A foi apertada E a peça vai estar numa posição válida,
                 # pode ir pra esquerda
                 if (event.key == K_LEFT or event.key == K_a) and isValidPosition(board, fallingPiece, adjX=-1):
+
+                    # Toca o som de movimento
+                    sounds.playMove()
+                    
                     # Atualiza o X uma posição a esquerda
                     fallingPiece['x'] -= 1
                     # Está indo pra esquerda
@@ -497,6 +511,10 @@ def runGame():
                 # Se a tecla RIGHT ou D foi apertada E a peça vai estar numa posição válida.
                 # pode ir pra direita
                 elif (event.key == K_RIGHT or event.key == K_d) and isValidPosition(board, fallingPiece, adjX=1):
+                    
+                    # Toca o som de movimento
+                    sounds.playMove()
+                    
                     # Atualiza o X uma posição a direita
                     fallingPiece['x'] += 1
                     # Está indo pra direita
@@ -514,6 +532,9 @@ def runGame():
                     # Se a rotação fez a peça ficar inválida, desfaz rotação
                     if not isValidPosition(board, fallingPiece):
                         fallingPiece['rotation'] = (fallingPiece['rotation'] - 1) % len(PIECES[fallingPiece['shape']])
+                    # Aplica o som de Rotação
+                    else:
+                        sounds.playRotate()
                 
                 # Se a tecla Q foi apertada, rotaciona a peça pra esquerda
                 elif (event.key == K_q):
@@ -523,6 +544,9 @@ def runGame():
                     # Se a rotação fez a peça ficar inválida, desfaz a rotação
                     if not isValidPosition(board, fallingPiece):
                         fallingPiece['rotation'] = (fallingPiece['rotation'] + 1) % len(PIECES[fallingPiece['shape']])
+                    # Aplica o som de Rotação
+                    else:
+                        sounds.playRotate()
 
                 # Se a tecla DOWN ou S foi apertada, desce a peça
                 elif (event.key == K_DOWN or event.key == K_s):
@@ -544,11 +568,15 @@ def runGame():
             if movingLeft and isValidPosition(board, fallingPiece, adjX=-1):
                 # Atualiza o x da peça pra esquerda
                 fallingPiece['x'] -= 1
+                # Adiciona o som de Movimento
+                sounds.playMove()
 
             # Se movimentou pra direita E a posição é valdia
             elif movingRight and isValidPosition(board, fallingPiece, adjX=1):
                 # Atualiza o x da peça pra direita
                 fallingPiece['x'] += 1
+                # Adiciona o som de Movimento
+                sounds.playRotate()
 
             # Atualiza o tempo da ultima movimentação pros lados
             lastMoveSidewaysTime = time.time()
@@ -578,6 +606,16 @@ def runGame():
                 # Remove as peças completadas recebendo uma tupla 
                 # contendo a (pontuação, linhasEliminadas)
                 x = removeCompleteLines(board)
+
+                # Se não exclui linhas, toca o som Drop
+                if x[1] == 0:
+                    sounds.playDrop()
+                # Se excluiu 4 linhas, toca Tetris
+                elif x[1] == 4:
+                    sounds.playTetris()
+                # Caso contrário, toca Lines
+                else:
+                    sounds.playLines()
 
                 # Somou os pontos
                 score += x[0]
@@ -623,10 +661,8 @@ def runGame():
         # Atualiza o inimigo
         enemy.update(score, level, clearLines, fallingPiece, nextPiece, board)
         
-        #enemy.draw()
-
         # Desenha o display do inimigo
-        #drawDisplayEnemy(board, score, level, clearLines, nextPiece, fallingPiece, "FELIPE")
+        drawDisplayEnemy(enemy.getStatus())
        
         # Atualiza o displa
         pygame.display.update()
@@ -963,21 +999,29 @@ def drawPiece(piece, pixelx=None, pixely=None, nextPiece=False):
                 drawBox(None, None, piece['color'], pixelx + (x * BOXSIZE), pixely + (y * BOXSIZE), nextPiece=nextPiece)
 
 #######################################################################################
+#                                                                                     #
+#                                                                                     #
+#                     FUNÇÕES PARA DESENHAR O JOGO DO INIMIGO                         #
+#                                                                                     #
+#                                                                                     #
+#######################################################################################
 
 '''
 Função que faz o processo de desenho do Display do adversário
 '''
-def drawDisplayEnemy(board, score, level, clearLines, nextPiece, fallingPiece, name):
+def drawDisplayEnemy(status):
     board = status['board']
     score = status['score']
-    level = status['level']
+    enemy_level = status['level']
     clearLines = status['lines']
-
+    name = status['name']
+    nextPiece = status['nextPiece']
+    fallingPiece = status['fallingPiece']
 
     # Desenha o campo inimigo
     drawBoardEnemy(board)
     # Desenha a pontuação e o nivel do inimigo
-    drawStatusEnemy(score, level, clearLines, name)
+    drawStatusEnemy(score, enemy_level, clearLines, name)
     # Desenha a próxima peça do inimigo 
     drawNextPieceEnemy(nextPiece)
 
@@ -1002,7 +1046,7 @@ def drawBoardEnemy(board):
 '''
 Função que desenha os Status do inimigo
 '''
-def drawStatusEnemy(score, level, lines, name):
+def drawStatusEnemy(score, enemy_level, lines, name):
     
     # DIFERENÇA DE PONTUAÇAO
 
@@ -1051,7 +1095,7 @@ def drawStatusEnemy(score, level, lines, name):
     DISPLAYSURF.blit(levelSurf, levelRect)
 
     # Pinta o Nível
-    levelSurf = LINESFONT.render('%s' %format(level, '02d'), False, TEXTCOLOR)
+    levelSurf = LINESFONT.render('%s' %format(enemy_level, '02d'), False, TEXTCOLOR)
     levelRect = levelSurf.get_rect()
     levelRect.center = (WINDOWWIDTH - 117,640)
     DISPLAYSURF.blit(levelSurf, levelRect)
