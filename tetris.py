@@ -468,6 +468,7 @@ def terminate():
 Função que cria uma Dict com os Status do Player
 '''
 def sendStatus(score=0, lines=0, fallingPiece=None, nextPiece=None, board=[]):
+    
     # Dict com o Status do Jogador principal
     status = {'name'        : NAME,
               'score'       : score,
@@ -767,8 +768,10 @@ def runGame():
             # Desenha a peça caindo
             drawPiece(fallingPiece)
         
-        # Desenha o display do inimigo
-        drawDisplayEnemy(enemy.getStatus())
+        # Se o inimigo morreu, não pinta
+        if not enemy.getState():
+            # Desenha o display do inimigo
+            drawDisplayEnemy(enemy.getStatus())
        
         # Atualiza o displa
         pygame.display.update()
