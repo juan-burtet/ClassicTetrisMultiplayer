@@ -10,11 +10,11 @@ import random, time, pygame, sys, socket, Enemy, Player
 import SoundEffect as sounds
 from pygame.locals import *
 
-
 # Informações para o Multiplayer
 ################################
 # Endereço IP do Servidor
-HOST = '10.0.1.2'     
+#HOST = '10.0.1.2'     
+HOST = '127.0.0.1'
 # Porta do Sevidor
 PORT = 5000
 # Alguma coisa            
@@ -262,6 +262,9 @@ def main(player):
     # Codifica a mensagem a ser enviada
     message = message.encode()
 
+    # tempo pra piscada
+    x = time.time()
+
     # Enquanto o nome for Vazio, espera o jogador entrar
     while enemy.getName() == '':
         
@@ -282,6 +285,22 @@ def main(player):
 
         # Pinta o fundo de preto
         DISPLAYSURF.fill(BGCOLOR)
+
+        # atualiza a string
+        text = 'WAITING PLAYER'
+        if int(time.time() - x) % 3 == 0:
+            text = text + '.'
+        elif int(time.time() - x) % 3 == 1:
+            text = text + '..'
+        else:
+            text = text + '...'
+
+        # Desenha o texto
+        titleSurf, titleRect = makeTextObjs(text, WINNERFONT, WHITE)
+        titleRect.center = (int(WINDOWWIDTH / 2) - 3, int(WINDOWHEIGHT / 2))
+        DISPLAYSURF.blit(titleSurf, titleRect)
+
+        # Atualiza o display
         pygame.display.update()
         FPSCLOCK.tick()
 
@@ -319,7 +338,8 @@ def main(player):
         # Imprime os dados recebidos
         print("Recebendo dados do adversário:", eval(receive), '\n\n')
 
-
+    # Imprime o vencer da partida!
+    showTetrisMaster(winner)
 
 '''
 Função que desenha a tela de inicio
@@ -424,6 +444,47 @@ def showWinnerScreen(text):
 
     # Desenha a string WINS THE ROUND
     titleSurf, titleRect = makeTextObjs('WON THE ROUND!', WINNERFONT, YELLOW)
+    titleRect.center = (int(WINDOWWIDTH / 2) - 3, int(WINDOWHEIGHT / 2) + position)
+    DISPLAYSURF.blit(titleSurf, titleRect)
+
+    t = time.time()
+    x = t;
+
+    sounds.stopMusic()
+    sounds.playSuccess()
+    # Espera até alguma tecla ser apertada
+    while x - t <= 2.3:
+        x = time.time()
+        pygame.display.update()
+        FPSCLOCK.tick()
+
+'''
+Função que immprime o vencedor na tela
+'''
+def showTetrisMaster(text):
+
+    # Pinta o fundo de preto
+    DISPLAYSURF.fill(BGCOLOR)
+
+    position = 100
+
+    # Desenha a sombra do texto
+    titleSurf, titleRect = makeTextObjs(text, WINNERFONT, BLACK)
+    titleRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2) - 3)
+    DISPLAYSURF.blit(titleSurf, titleRect)
+
+    # Desenha o texto
+    titleSurf, titleRect = makeTextObjs(text, WINNERFONT, YELLOW)
+    titleRect.center = (int(WINDOWWIDTH / 2) - 3, int(WINDOWHEIGHT / 2))
+    DISPLAYSURF.blit(titleSurf, titleRect)
+
+    # Desenha a sombra da String WINS THE ROUND
+    titleSurf, titleRect = makeTextObjs('IS A TETRIS MASTER!',WINNERFONT, BLACK)
+    titleRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2) + position - 3)
+    DISPLAYSURF.blit(titleSurf, titleRect)
+
+    # Desenha a string WINS THE ROUND
+    titleSurf, titleRect = makeTextObjs('IS A TETRIS MASTER!', WINNERFONT, YELLOW)
     titleRect.center = (int(WINDOWWIDTH / 2) - 3, int(WINDOWHEIGHT / 2) + position)
     DISPLAYSURF.blit(titleSurf, titleRect)
 
@@ -908,8 +969,7 @@ e o tempo para cair a próxima peça.
 '''
 def calculateLevelAndFallFreq(clearLines):
     
-    #level = int(clearLines/10);
-    level = 8
+    level = int(clearLines/10);
 
     if (level >= 0 and level <= 8):
         fallFreq = (48 - 5*level)/FPS
