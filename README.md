@@ -1,12 +1,17 @@
 # Classic Tetris Multiplayer
 
+## Criadores
+
+* Juan Burtet - \[[GitHub](https://github.com/juan-burtet)\]
+* Felipe Camargo Gruendemann - \[[GitHub](https://github.com/FelipeGruend)\]
+
 ## Descrição
 
 Classic Tetris Multiplayer é inspirado em __CTWC__(_Classic Tetris World Championship_), um Campeonato da versão de NES do Tetris, onde os jogadores jogam uns contra os outros para ver quem faz a maior pontuação. Como a versão original do jogo não conta com uma versão Multiplayer (No campeonato eles jogam com 2 consoles), esse trabalho tenta recriar o design do Campeonato sem a necessidade de 2 Nintendinhos. Para mais informações, ler o [Relatório do Trabalho](/Relatório/relatorio.pdf).
 
 ## Screenshots
 
- <img src="/Images/STARTSCREEN.png" width="300px"> <img src="/Images/GAMEPLAY.png" width="300px"> <img src="/Images/WINNER.png" width="300px">
+ <img src="/Images/STARTSCREEN.png" width="250px"> <img src="/Images/GAMEPLAY.png" width="250px"> <img src="/Images/WINNER.png" width="250px">
 
 ## Como Utilizar
 
