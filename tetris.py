@@ -1312,21 +1312,21 @@ def drawDisplayEnemy(status):
     fallingPiece = status['fallingPiece']
 
     # Desenha o campo inimigo
-    drawBoardEnemy(board)
+    drawBoardEnemy(board, enemy_level)
     # Desenha a pontuação e o nivel do inimigo
     drawStatusEnemy(score, enemy_level, clearLines, name)
     # Desenha a próxima peça do inimigo 
-    drawNextPieceEnemy(nextPiece)
+    drawNextPieceEnemy(nextPiece, enemy_level)
 
     # Se tiver uma peça caindo do inimigo
     if fallingPiece != None:
         # Desenha a peça caindo do inimigo
-        drawPieceEnemy(fallingPiece)    
+        drawPieceEnemy(fallingPiece, enemy_level)    
 
 '''
 Função que desenha o campo do inimigo
 '''
-def drawBoardEnemy(board):
+def drawBoardEnemy(board, enemy_level):
     
     if board == []:
         return    
@@ -1337,7 +1337,7 @@ def drawBoardEnemy(board):
     # Pinta cada quadrado separadamente
     for x in range(BOARDWIDTH):
         for y in range(BOARDHEIGHT):
-            drawBoxEnemy(x, y, board[x][y])
+            drawBoxEnemy(x, y, board[x][y], enemy_level)
 
 '''
 Função que desenha os Status do inimigo
@@ -1409,10 +1409,9 @@ def drawStatusEnemy(score, enemy_level, lines, name):
 '''
 Função que desenha a próxima peça do inimigo
 '''
-def drawNextPieceEnemy(piece, nextPiece=False):
+def drawNextPieceEnemy(piece, enemy_level, nextPiece=False):
     if piece == None:
         return
-
 
     # Posições padrões
     x, y = WINDOWWIDTH -260, 85
@@ -1425,12 +1424,12 @@ def drawNextPieceEnemy(piece, nextPiece=False):
         y += 7
 
     # Pinta a próxima peça
-    drawPiece(piece, pixelx=x, pixely=y, nextPiece=True)
+    drawPieceEnemy(piece, enemy_level, pixelx=x, pixely=y, nextPiece=True)
 
 '''
 Função que desenha a próxima peça do inimigo
 '''
-def drawPieceEnemy(piece, pixelx=None, pixely=None, nextPiece=False):
+def drawPieceEnemy(piece, enemy_level, pixelx=None, pixely=None, nextPiece=False):
     
     # Se não tem peça, retorna
     if piece == None:
@@ -1450,7 +1449,7 @@ def drawPieceEnemy(piece, pixelx=None, pixely=None, nextPiece=False):
             # Se a posição não for vazia
             if shapeToDraw[y][x] != BLANK:
                 # Pinta a peça na tela
-                drawBoxEnemy(None, None, piece['color'], pixelx + (x * BOXSIZE), pixely + (y * BOXSIZE), nextPiece=nextPiece)
+                drawBoxEnemy(None, None, piece['color'],  enemy_level, pixelx + (x * BOXSIZE), pixely + (y * BOXSIZE), nextPiece=nextPiece)
 
 '''
 Função que converte a posição do campo inimigo
@@ -1463,7 +1462,7 @@ def convertToPixelCoordsEnemy(boxx, boxy):
 '''
 Função que desenha um quadrado das peças do inimigo
 '''
-def drawBoxEnemy(boxx, boxy, color, pixelx=None, pixely=None, nextPiece=False):
+def drawBoxEnemy(boxx, boxy, color, enemy_level, pixelx=None, pixely=None, nextPiece=False):
     
     # Se a cor for vazio, nao pinta
     if color == BLANK:
@@ -1478,4 +1477,4 @@ def drawBoxEnemy(boxx, boxy, color, pixelx=None, pixely=None, nextPiece=False):
     # Garante que não seja pintado fora do campo
     if(pixely + 1 > TOPMARGIN or nextPiece):
         # Pinta o quadrado com a textura correta
-        DISPLAYSURF.blit(BLOCKS[level % 10][color], (pixelx + 1, pixely + 1))
+        DISPLAYSURF.blit(BLOCKS[enemy_level % 10][color], (pixelx + 1, pixely + 1))
