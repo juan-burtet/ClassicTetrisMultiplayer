@@ -39,3 +39,10 @@ Classic Tetris Multiplayer é inspirado em __CTWC__(_Classic Tetris World Champi
 
 Código do Tetris baseado do Site [Making Games with Python & Pygame](http://inventwithpython.com/pygame/)
   * [Chapter 7 - Tetromino](http://inventwithpython.com/pygame/chapter7.html)
+
+## TODO
+
+- [ ] Adicionar modo Single-Player
+- [ ] Poder modificar o nível inicial 
+- [ ] Poder modificar a quantidade de Rounds de uma partida
+- [ ] Dividir o Projeto em Classes
