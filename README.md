@@ -11,7 +11,7 @@ Classic Tetris Multiplayer é inspirado em __CTWC__(_Classic Tetris World Champi
 
 ## Screenshots
 
- <img src="/Images/STARTSCREEN.png" width="250px"> <img src="/Images/GAMEPLAY.png" width="250px"> <img src="/Images/WINNER.png" width="250px">
+ <img src="/Images/STARTSCREEN.png" width="285px"> <img src="/Images/GAMEPLAY.png" width="285px"> <img src="/Images/WINNER.png" width="285px">
 
 ## Como Utilizar
 
