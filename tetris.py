@@ -13,8 +13,8 @@ from pygame.locals import *
 # Informações para o Multiplayer
 ################################
 # Endereço IP do Servidor
-#HOST = '10.0.1.2'     
-HOST = '127.0.0.1'
+HOST = '192.168.15.56'     
+#HOST = '127.0.0.1'
 # Porta do Sevidor
 PORT = 5000
 # Alguma coisa            
